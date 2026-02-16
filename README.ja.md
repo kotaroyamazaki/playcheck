@@ -2,7 +2,7 @@
 
 Google Play Store申請前に**あらゆるAndroidプロジェクト**のコンプライアンス問題を検出するCLIツール。ネイティブAndroid（Kotlin/Java）、Flutter、React Native、その他のフレームワークに対応。ポリシー違反、危険なパーミッション、セキュリティ問題、データ安全性の不備を開発早期に発見します。
 
-> 💡 **[Greenlight](https://github.com/cpisciotta/Greenlight)に触発されました** - iOSで実現されているコンプライアンススキャン機能をAndroid開発者にも。
+> 💡 **[Greenlight](https://github.com/RevylAI/greenlight)に触発されました** - iOSで実現されているコンプライアンススキャン機能をAndroid開発者にも。
 
 [English](README.md) | 日本語
 

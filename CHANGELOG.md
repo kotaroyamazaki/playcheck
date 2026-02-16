@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-02-16
+
 ### Added
-- Initial release of playcheck MVP
 - AndroidManifest.xml validation (SDK version, permissions, components)
 - Kotlin/Java code scanning (14 detection rules)
 - Data safety compliance checking
@@ -31,30 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Security Issues**: Cleartext traffic, hardcoded secrets, exported components, weak cryptography
 - **Third-party SDKs**: Firebase Analytics, Firebase Crashlytics, AdMob, Facebook SDK, tracking SDKs (Adjust, AppsFlyer, Amplitude, Mixpanel, etc.)
 
-### Fixed
-- SmsRetriever false positive (removed from SMS violation - it's Google's recommended API)
-- Target SDK version updated from 34 to 35 in policies.json (2026 requirement)
-- Exit code handling improved (returns error instead of calling os.Exit(1) directly)
-- HttpURLConnection pattern fixed to avoid matching HttpsURLConnection
-- README installation URLs corrected
-
 ### Documentation
 - Comprehensive README with usage examples
 - Japanese README (README.ja.md)
+- Framework support guide (FRAMEWORKS.md)
 - Contributing guidelines (CONTRIBUTING.md)
 - MIT License
-- Implementation summary document
 - GitHub issue templates (bug report, feature request)
-
-## [1.0.0] - 2026-02-15
-
-### Initial Release
-- First public release of playcheck
-- Full MVP implementation with 31+ policy rules
-- Production-ready with comprehensive test coverage
-- Support for Google Play Store 2026 requirements
+- GitHub Actions workflows (CI, Release)
 
 ---
 
-[Unreleased]: https://github.com/yourusername/playcheck/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/yourusername/playcheck/releases/tag/v1.0.0
+[Unreleased]: https://github.com/kotaroyamazaki/playcheck/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/kotaroyamazaki/playcheck/releases/tag/v1.0.0

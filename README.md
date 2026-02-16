@@ -2,7 +2,7 @@
 
 A CLI tool that scans **any Android project** for Google Play Store compliance issues before submission. Works with native Android (Kotlin/Java), Flutter, React Native, and other frameworks. Catches policy violations, dangerous permissions, security issues, and data safety gaps early in development.
 
-> 💡 **Inspired by [Greenlight](https://github.com/cpisciotta/Greenlight)** - bringing the same compliance scanning capabilities from iOS to Android developers.
+> 💡 **Inspired by [Greenlight](https://github.com/RevylAI/greenlight)** - bringing the same compliance scanning capabilities from iOS to Android developers.
 
 English | [日本語](README.ja.md)
 
@@ -259,7 +259,7 @@ go test ./internal/preflight/...
 
 ## Acknowledgments
 
-This project was inspired by [Greenlight](https://github.com/cpisciotta/Greenlight), an excellent App Store compliance scanner for iOS apps. Just as Greenlight helps iOS developers catch App Store policy violations early, playcheck aims to provide the same value for Android developers targeting Google Play Store.
+This project was inspired by [Greenlight](https://github.com/RevylAI/greenlight), an excellent App Store compliance scanner for iOS apps. Just as Greenlight helps iOS developers catch App Store policy violations early, playcheck aims to provide the same value for Android developers targeting Google Play Store.
 
 This project uses the following open-source libraries:
 
