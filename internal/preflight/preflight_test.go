@@ -3,6 +3,7 @@ package preflight
 import (
 	"fmt"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -98,12 +99,12 @@ func TestRunner_ProgressCallback(t *testing.T) {
 	r.RegisterScanner(&mockScanner{id: "s2"})
 	r.RegisterScanner(&mockScanner{id: "s3"})
 
-	callCount := 0
+	callCount := &atomic.Int32{}
 	r.Run("/tmp", func() {
-		callCount++
+		callCount.Add(1)
 	})
-	if callCount != 3 {
-		t.Errorf("expected progress called 3 times, got %d", callCount)
+	if callCount.Load() != 3 {
+		t.Errorf("expected progress called 3 times, got %d", callCount.Load())
 	}
 }
 

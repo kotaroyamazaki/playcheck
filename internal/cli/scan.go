@@ -79,10 +79,10 @@ func runScan(projectPath string, opts *scanOptions) error {
 	)
 
 	scanResult := runner.Run(absPath, func() {
-		bar.Add(1)
+		_ = bar.Add(1)
 	})
 
-	bar.Finish()
+	_ = bar.Finish()
 	fmt.Fprint(os.Stderr, "\r\033[K") // clear progress bar line
 
 	report := preflight.NewReport(scanResult, minSeverity)

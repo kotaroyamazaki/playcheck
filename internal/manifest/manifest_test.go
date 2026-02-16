@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"os"
 	"testing"
 
 	"github.com/kotaroyamazaki/playcheck/internal/preflight"
@@ -364,5 +365,178 @@ func TestManifestScanner(t *testing.T) {
 	}
 	if scanner.Description() == "" {
 		t.Error("Description should not be empty")
+	}
+}
+
+// --- Tests for ParseFile ---
+
+func TestParseFile(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/AndroidManifest.xml"
+	content := `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.parsefile">
+    <uses-sdk android:targetSdkVersion="35" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application />
+</manifest>`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := ParseFile(path)
+	if err != nil {
+		t.Fatalf("ParseFile error: %v", err)
+	}
+	if m.Package != "com.example.parsefile" {
+		t.Errorf("Package = %q, want %q", m.Package, "com.example.parsefile")
+	}
+	if m.FilePath() != path {
+		t.Errorf("FilePath = %q, want %q", m.FilePath(), path)
+	}
+	if m.TargetSdkVersion != 35 {
+		t.Errorf("TargetSdkVersion = %d, want 35", m.TargetSdkVersion)
+	}
+	if len(m.Permissions) != 1 {
+		t.Errorf("got %d permissions, want 1", len(m.Permissions))
+	}
+}
+
+func TestParseFile_NonexistentPath(t *testing.T) {
+	_, err := ParseFile("/nonexistent/AndroidManifest.xml")
+	if err == nil {
+		t.Error("expected error for nonexistent file")
+	}
+}
+
+func TestParseFile_MalformedXML(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/AndroidManifest.xml"
+	if err := os.WriteFile(path, []byte("<manifest><broken"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ParseFile(path)
+	if err == nil {
+		t.Error("expected error for malformed XML")
+	}
+}
+
+// --- Tests for FindAndParse ---
+
+func TestFindAndParse_AppSrcMain(t *testing.T) {
+	dir := t.TempDir()
+	manifestDir := dir + "/app/src/main"
+	if err := os.MkdirAll(manifestDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	content := `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.findandparse">
+    <uses-sdk android:targetSdkVersion="35" />
+    <application />
+</manifest>`
+	if err := os.WriteFile(manifestDir+"/AndroidManifest.xml", []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := FindAndParse(dir)
+	if err != nil {
+		t.Fatalf("FindAndParse error: %v", err)
+	}
+	if m.Package != "com.example.findandparse" {
+		t.Errorf("Package = %q, want %q", m.Package, "com.example.findandparse")
+	}
+}
+
+func TestFindAndParse_RootManifest(t *testing.T) {
+	dir := t.TempDir()
+	content := `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.root">
+    <uses-sdk android:targetSdkVersion="35" />
+    <application />
+</manifest>`
+	if err := os.WriteFile(dir+"/AndroidManifest.xml", []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := FindAndParse(dir)
+	if err != nil {
+		t.Fatalf("FindAndParse error: %v", err)
+	}
+	if m.Package != "com.example.root" {
+		t.Errorf("Package = %q, want %q", m.Package, "com.example.root")
+	}
+}
+
+func TestFindAndParse_SrcMainManifest(t *testing.T) {
+	dir := t.TempDir()
+	manifestDir := dir + "/src/main"
+	if err := os.MkdirAll(manifestDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	content := `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.srcmain">
+    <uses-sdk android:targetSdkVersion="35" />
+    <application />
+</manifest>`
+	if err := os.WriteFile(manifestDir+"/AndroidManifest.xml", []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := FindAndParse(dir)
+	if err != nil {
+		t.Fatalf("FindAndParse error: %v", err)
+	}
+	if m.Package != "com.example.srcmain" {
+		t.Errorf("Package = %q, want %q", m.Package, "com.example.srcmain")
+	}
+}
+
+func TestFindAndParse_NotFound(t *testing.T) {
+	dir := t.TempDir()
+	_, err := FindAndParse(dir)
+	if err == nil {
+		t.Error("expected error when no manifest found")
+	}
+}
+
+func TestFindAndParse_PriorityOrder(t *testing.T) {
+	// When both app/src/main/ and root exist, app/src/main/ should be preferred
+	dir := t.TempDir()
+	manifestDir := dir + "/app/src/main"
+	if err := os.MkdirAll(manifestDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	appManifest := `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app">
+    <uses-sdk android:targetSdkVersion="35" />
+    <application />
+</manifest>`
+	rootManifest := `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.root">
+    <uses-sdk android:targetSdkVersion="35" />
+    <application />
+</manifest>`
+
+	if err := os.WriteFile(manifestDir+"/AndroidManifest.xml", []byte(appManifest), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dir+"/AndroidManifest.xml", []byte(rootManifest), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := FindAndParse(dir)
+	if err != nil {
+		t.Fatalf("FindAndParse error: %v", err)
+	}
+	// app/src/main/ is checked first, so should return that one
+	if m.Package != "com.example.app" {
+		t.Errorf("Package = %q, want %q (app/src/main should take priority)", m.Package, "com.example.app")
 	}
 }

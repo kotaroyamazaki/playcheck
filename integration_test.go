@@ -3,6 +3,7 @@ package integration_test
 import (
 	"path/filepath"
 	"runtime"
+	"sync/atomic"
 	"testing"
 
 	"github.com/kotaroyamazaki/playcheck/internal/codescan"
@@ -213,13 +214,13 @@ func TestIntegration_ProgressCallback(t *testing.T) {
 	appDir := filepath.Join(root, "testdata", "sample-apps", "clean-app")
 
 	runner := newFullRunner()
-	callCount := 0
+	callCount := &atomic.Int32{}
 	runner.Run(appDir, func() {
-		callCount++
+		callCount.Add(1)
 	})
 
 	// 3 scanners = 3 progress callbacks
-	if callCount != 3 {
-		t.Errorf("expected 3 progress callbacks, got %d", callCount)
+	if callCount.Load() != 3 {
+		t.Errorf("expected 3 progress callbacks, got %d", callCount.Load())
 	}
 }
