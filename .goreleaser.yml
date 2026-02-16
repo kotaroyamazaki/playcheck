@@ -1,0 +1,89 @@
+project_name: playcheck
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: playcheck
+    main: ./cmd/scanner
+    binary: playcheck
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - README.ja.md
+      - LICENSE
+      - CHANGELOG.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+
+release:
+  github:
+    owner: yourusername
+    name: playcheck
+  draft: false
+  prerelease: auto
+  name_template: "{{.ProjectName}} {{.Version}}"
+  header: |
+    ## Google Play Store Compliance Scanner {{.Version}}
+
+    Pre-scan your Android projects for Google Play Store policy violations.
+
+    ### Installation
+
+    Download the appropriate binary for your platform below, or use:
+
+    ```bash
+    go install github.com/yourusername/playcheck/cmd/scanner@{{.Version}}
+    ```
+
+  footer: |
+    **Full Changelog**: https://github.com/yourusername/playcheck/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+homebrew:
+  - name: playcheck
+    homepage: https://github.com/yourusername/playcheck
+    description: "Scan Android projects for Google Play Store compliance issues"
+    license: MIT
+    repository:
+      owner: yourusername
+      name: homebrew-tap

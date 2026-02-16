@@ -1,0 +1,41 @@
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+playstore-scanner
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+.gopath/
+.modcache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test outputs
+*.log
+test-reports/
+
+# Temporary files
+tmp/
+temp/

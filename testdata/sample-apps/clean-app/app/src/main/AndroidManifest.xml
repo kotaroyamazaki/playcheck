@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.clean">
+
+    <!-- Only necessary, non-dangerous permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="false"
+        android:usesCleartextTraffic="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.Clean"
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="35" />
+
+        <!-- Properly configured launcher activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Non-exported internal activities -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".AccountDeletionActivity"
+            android:exported="false" />
+
+        <!-- Service properly not exported -->
+        <service
+            android:name=".SyncService"
+            android:exported="false" />
+
+        <!-- Privacy policy metadata -->
+        <meta-data
+            android:name="privacy_policy_url"
+            android:value="https://example.com/privacy-policy" />
+
+    </application>
+</manifest>

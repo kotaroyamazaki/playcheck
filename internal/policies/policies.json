@@ -1,0 +1,438 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "DP001",
+      "name": "SMS Permission Usage",
+      "severity": "CRITICAL",
+      "category": "dangerous_permissions",
+      "description": "Apps requesting SMS permissions (READ_SMS, SEND_SMS, RECEIVE_SMS) must be the default SMS handler or have an approved use case.",
+      "message": "App requests SMS permission '%s' which requires a Permissions Declaration Form and approved use case.",
+      "detection_patterns": [
+        {"type": "manifest_permission", "value": "android.permission.READ_SMS", "context": ""},
+        {"type": "manifest_permission", "value": "android.permission.SEND_SMS", "context": ""},
+        {"type": "manifest_permission", "value": "android.permission.RECEIVE_SMS", "context": ""},
+        {"type": "manifest_permission", "value": "android.permission.WRITE_SMS", "context": ""}
+      ],
+      "remediation": "Remove SMS permissions unless your app is the default SMS handler. If required, submit a Permissions Declaration Form in Google Play Console.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9047303"
+    },
+    {
+      "id": "DP002",
+      "name": "Call Log Permission Usage",
+      "severity": "CRITICAL",
+      "category": "dangerous_permissions",
+      "description": "Apps requesting call log permissions must be the default phone/dialer handler or have an approved use case.",
+      "message": "App requests call log permission '%s' which requires a Permissions Declaration Form.",
+      "detection_patterns": [
+        {"type": "manifest_permission", "value": "android.permission.READ_CALL_LOG", "context": ""},
+        {"type": "manifest_permission", "value": "android.permission.WRITE_CALL_LOG", "context": ""},
+        {"type": "manifest_permission", "value": "android.permission.PROCESS_OUTGOING_CALLS", "context": ""}
+      ],
+      "remediation": "Remove call log permissions unless your app is the default phone handler. If required, submit a Permissions Declaration Form.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9047303"
+    },
+    {
+      "id": "DP003",
+      "name": "Location in Background Permission",
+      "severity": "CRITICAL",
+      "category": "dangerous_permissions",
+      "description": "ACCESS_BACKGROUND_LOCATION requires justification and a Permissions Declaration Form. Apps must demonstrate a clear user benefit.",
+      "message": "App requests ACCESS_BACKGROUND_LOCATION which requires a Permissions Declaration Form and demonstrated user benefit.",
+      "detection_patterns": [
+        {"type": "manifest_permission", "value": "android.permission.ACCESS_BACKGROUND_LOCATION", "context": ""}
+      ],
+      "remediation": "Use foreground location instead where possible. If background location is essential, submit a Permissions Declaration Form explaining the user benefit.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9799150"
+    },
+    {
+      "id": "DP004",
+      "name": "Camera Permission Without Usage",
+      "severity": "WARNING",
+      "category": "dangerous_permissions",
+      "description": "Camera permission is declared but no camera usage was detected in the code. Unused permissions may lead to policy rejection.",
+      "message": "App requests CAMERA permission but no camera API usage was detected in the codebase.",
+      "detection_patterns": [
+        {"type": "manifest_permission", "value": "android.permission.CAMERA", "context": ""}
+      ],
+      "remediation": "Remove the CAMERA permission if camera functionality is not implemented. Only declare permissions that are actively used.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9888170"
+    },
+    {
+      "id": "DP005",
+      "name": "Storage Permission (Broad Access)",
+      "severity": "ERROR",
+      "category": "dangerous_permissions",
+      "description": "MANAGE_EXTERNAL_STORAGE grants access to all files and requires justification. Most apps should use scoped storage instead.",
+      "message": "App requests MANAGE_EXTERNAL_STORAGE (all files access) which requires a Permissions Declaration Form.",
+      "detection_patterns": [
+        {"type": "manifest_permission", "value": "android.permission.MANAGE_EXTERNAL_STORAGE", "context": ""}
+      ],
+      "remediation": "Use scoped storage APIs (MediaStore, Storage Access Framework) instead of broad file access. If MANAGE_EXTERNAL_STORAGE is essential, submit a declaration form.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9956427"
+    },
+    {
+      "id": "DP006",
+      "name": "Exact Alarm Permission",
+      "severity": "WARNING",
+      "category": "dangerous_permissions",
+      "description": "SCHEDULE_EXACT_ALARM requires justification on Android 12+. Only alarm/timer/calendar apps should use this permission.",
+      "message": "App requests SCHEDULE_EXACT_ALARM which is restricted to alarm, timer, and calendar apps on Android 12+.",
+      "detection_patterns": [
+        {"type": "manifest_permission", "value": "android.permission.SCHEDULE_EXACT_ALARM", "context": ""}
+      ],
+      "remediation": "Use inexact alarms (setAndAllowWhileIdle, setWindow) unless your app is an alarm clock, timer, or calendar app.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/12253906"
+    },
+    {
+      "id": "DP007",
+      "name": "Query All Packages Permission",
+      "severity": "WARNING",
+      "category": "dangerous_permissions",
+      "description": "QUERY_ALL_PACKAGES provides broad visibility into installed apps and requires justification.",
+      "message": "App requests QUERY_ALL_PACKAGES which requires a Permissions Declaration Form and justified use case.",
+      "detection_patterns": [
+        {"type": "manifest_permission", "value": "android.permission.QUERY_ALL_PACKAGES", "context": ""}
+      ],
+      "remediation": "Use targeted package visibility with <queries> element in the manifest instead of QUERY_ALL_PACKAGES.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/10158779"
+    },
+    {
+      "id": "PDS001",
+      "name": "Missing Privacy Policy",
+      "severity": "CRITICAL",
+      "category": "privacy_data_safety",
+      "description": "Apps that collect personal or sensitive user data must have a privacy policy. The policy must be accessible from within the app and from the store listing.",
+      "message": "No privacy policy URL detected in the app. A privacy policy is required for apps that handle user data.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "privacy.?policy|PrivacyPolicy|privacy_policy", "context": ""},
+        {"type": "manifest_element", "value": "//meta-data[@android:name='privacy_policy_url']", "context": ""}
+      ],
+      "remediation": "Add a privacy policy that is accessible from within the app and from the Play Store listing. The policy must disclose data collection, usage, and sharing practices.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9859455"
+    },
+    {
+      "id": "PDS002",
+      "name": "Data Collection Without Disclosure",
+      "severity": "ERROR",
+      "category": "privacy_data_safety",
+      "description": "Apps collecting user data (location, contacts, device IDs) must disclose this prominently before collection and obtain consent.",
+      "message": "App appears to collect '%s' data. Ensure a prominent disclosure is shown before collection.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "getDeviceId|getSubscriberId|getSimSerialNumber|ANDROID_ID|advertisingId", "context": ""},
+        {"type": "code_pattern", "value": "TelephonyManager\\.|getLine1Number|getImei", "context": ""},
+        {"type": "code_pattern", "value": "ContactsContract|READ_CONTACTS", "context": ""}
+      ],
+      "remediation": "Add a prominent in-app disclosure before collecting user data. The disclosure must explain what data is collected, why, and how it is used.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/10144311"
+    },
+    {
+      "id": "PDS003",
+      "name": "Data Safety Section Mismatch",
+      "severity": "ERROR",
+      "category": "privacy_data_safety",
+      "description": "The app collects data types that may not be declared in the Data Safety section on the Play Store listing.",
+      "message": "App collects '%s' data which must be declared in the Data Safety section of the Play Console.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "getLastKnownLocation|requestLocationUpdates|FusedLocationProviderClient", "context": ""},
+        {"type": "code_pattern", "value": "FirebaseAnalytics|logEvent|setUserProperty", "context": ""},
+        {"type": "code_pattern", "value": "SharedPreferences.*email|SharedPreferences.*name|SharedPreferences.*phone", "context": ""}
+      ],
+      "remediation": "Update the Data Safety section in the Play Console to accurately reflect all data types collected, shared, and processed by the app.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/10787469"
+    },
+    {
+      "id": "PDS004",
+      "name": "Missing Data Deletion Mechanism",
+      "severity": "WARNING",
+      "category": "privacy_data_safety",
+      "description": "Apps that collect user data should provide a mechanism for users to request data deletion.",
+      "message": "No data deletion mechanism detected. Apps collecting user data must allow users to request deletion.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "delete.*account|deleteAccount|account.*delet|data.*delet|delet.*data|removeUser", "context": ""}
+      ],
+      "remediation": "Implement an in-app mechanism and/or web resource for users to request deletion of their data. Provide the URL in the Data Safety section.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/13327111"
+    },
+    {
+      "id": "SDK001",
+      "name": "Outdated Target SDK Version",
+      "severity": "CRITICAL",
+      "category": "sdk_compliance",
+      "description": "Google Play requires apps to target a recent Android SDK version. New apps and updates must meet the current target SDK requirement.",
+      "message": "App targets SDK version %s, which is below the required minimum of %s for Google Play submission.",
+      "detection_patterns": [
+        {"type": "manifest_attribute", "value": "targetSdkVersion", "context": "minimum:35"}
+      ],
+      "remediation": "Update targetSdkVersion in your build.gradle to at least API level 35 (Android 15). Ensure the app is compatible with the newer SDK.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/11926878"
+    },
+    {
+      "id": "SDK004",
+      "name": "Deprecated API Usage",
+      "severity": "WARNING",
+      "category": "sdk_compliance",
+      "description": "The app uses APIs that are deprecated or removed in recent Android versions and may cause crashes or policy issues.",
+      "message": "App uses deprecated API '%s' which may be removed in future Android versions.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "getRunningTasks|getRunningAppProcesses|getRecentTasks", "context": ""},
+        {"type": "code_pattern", "value": "PackageManager\\.GET_SIGNATURES(?!\\.)(?!_)", "context": ""},
+        {"type": "code_pattern", "value": "webView\\.getSettings\\(\\)\\.setJavaScriptEnabled\\(true\\)", "context": ""}
+      ],
+      "remediation": "Replace deprecated API calls with their modern equivalents. Consult the Android API reference for migration guidance.",
+      "policy_link": "https://developer.android.com/distribute/best-practices/develop/target-sdk"
+    },
+    {
+      "id": "AD001",
+      "name": "Missing Account Deletion Option",
+      "severity": "CRITICAL",
+      "category": "account_management",
+      "description": "Apps that allow account creation must provide users with the ability to delete their account from within the app and online.",
+      "message": "App allows account creation but no account deletion flow was detected.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "createUser|signUp|register|createAccount|SignUpActivity|RegisterActivity", "context": ""},
+        {"type": "code_pattern", "value": "FirebaseAuth\\.getInstance\\(\\)\\.createUser", "context": ""}
+      ],
+      "remediation": "Implement an in-app account deletion flow. Users must be able to delete their account and associated data. Provide a web-based deletion option as well.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/13327111"
+    },
+    {
+      "id": "MV001",
+      "name": "Missing App Icon",
+      "severity": "ERROR",
+      "category": "manifest_validation",
+      "description": "The AndroidManifest.xml must specify an application icon. Missing icons will cause Play Store rejection.",
+      "message": "The <application> element is missing the android:icon attribute.",
+      "detection_patterns": [
+        {"type": "manifest_attribute", "value": "application:android:icon", "context": "required"}
+      ],
+      "remediation": "Add an android:icon attribute to the <application> element pointing to your app's launcher icon resource.",
+      "policy_link": "https://developer.android.com/guide/topics/manifest/application-element"
+    },
+    {
+      "id": "MV002",
+      "name": "Debuggable Build",
+      "severity": "CRITICAL",
+      "category": "manifest_validation",
+      "description": "Release builds must not have android:debuggable set to true. Debuggable apps are a security risk and will be rejected.",
+      "message": "App has android:debuggable='true' which is not allowed for Play Store submissions.",
+      "detection_patterns": [
+        {"type": "manifest_attribute", "value": "application:android:debuggable=true", "context": "forbidden"}
+      ],
+      "remediation": "Remove android:debuggable='true' from the manifest or ensure it is set to false for release builds. Use build types in Gradle to manage this.",
+      "policy_link": "https://developer.android.com/guide/topics/manifest/application-element#debug"
+    },
+    {
+      "id": "MV003",
+      "name": "Missing Version Code",
+      "severity": "ERROR",
+      "category": "manifest_validation",
+      "description": "The manifest must specify a versionCode. This is required for Play Store upload and update ordering.",
+      "message": "The manifest is missing android:versionCode which is required for Play Store submissions.",
+      "detection_patterns": [
+        {"type": "manifest_attribute", "value": "manifest:android:versionCode", "context": "required"}
+      ],
+      "remediation": "Add android:versionCode to the <manifest> element or ensure it is set in your build.gradle file.",
+      "policy_link": "https://developer.android.com/guide/topics/manifest/manifest-element"
+    },
+    {
+      "id": "MV004",
+      "name": "Backup Rules Missing",
+      "severity": "WARNING",
+      "category": "manifest_validation",
+      "description": "Apps targeting Android 12+ should define backup rules. Missing rules may result in unintended data backup.",
+      "message": "No android:dataExtractionRules specified for Android 12+ backup configuration.",
+      "detection_patterns": [
+        {"type": "manifest_attribute", "value": "application:android:dataExtractionRules", "context": "recommended"},
+        {"type": "manifest_attribute", "value": "application:android:fullBackupContent", "context": "recommended"}
+      ],
+      "remediation": "Add android:dataExtractionRules (for Android 12+) and android:fullBackupContent (for older versions) to the <application> element.",
+      "policy_link": "https://developer.android.com/guide/topics/data/autobackup"
+    },
+    {
+      "id": "MC001",
+      "name": "Missing Content Rating",
+      "severity": "WARNING",
+      "category": "content_policy",
+      "description": "Apps should not contain content that would exceed the declared content rating. Check for potentially inappropriate content references.",
+      "message": "Potential content that may exceed declared content rating detected: '%s'.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "WebView.*loadUrl|shouldOverrideUrlLoading", "context": ""},
+        {"type": "code_pattern", "value": "setJavaScriptEnabled\\(true\\).*addJavascriptInterface", "context": ""}
+      ],
+      "remediation": "Ensure WebView content is filtered appropriately and the content rating questionnaire in Play Console accurately reflects all app content.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9859455"
+    },
+    {
+      "id": "MP002",
+      "name": "Non-Play Billing for Digital Goods",
+      "severity": "CRITICAL",
+      "category": "monetization",
+      "description": "Apps that sell digital goods or subscriptions must use Google Play Billing. Third-party payment processors are not allowed for digital content.",
+      "message": "Potential use of non-Play billing for digital goods detected: '%s'.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "stripe\\.android|com\\.stripe|PaymentIntent|braintree|com\\.paypal", "context": ""},
+        {"type": "code_pattern", "value": "razorpay|com\\.razorpay|checkout\\.open", "context": ""}
+      ],
+      "remediation": "Use Google Play Billing Library for digital goods and subscriptions. Third-party payment is only allowed for physical goods and services.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9858738"
+    },
+    {
+      "id": "MS001",
+      "name": "Insecure Network Communication",
+      "severity": "ERROR",
+      "category": "security",
+      "description": "Apps should not use cleartext HTTP traffic. All network communication should use HTTPS.",
+      "message": "App allows cleartext (HTTP) traffic which is a security risk. Use HTTPS for all network communication.",
+      "detection_patterns": [
+        {"type": "manifest_attribute", "value": "application:android:usesCleartextTraffic=true", "context": "forbidden"},
+        {"type": "code_pattern", "value": "http://[^\\s\"']+", "context": ""},
+        {"type": "manifest_element", "value": "//network-security-config//cleartextTrafficPermitted='true'", "context": ""}
+      ],
+      "remediation": "Set android:usesCleartextTraffic='false' and use HTTPS for all network requests. Configure a network security config if exceptions are needed.",
+      "policy_link": "https://developer.android.com/privacy-and-security/security-config"
+    },
+    {
+      "id": "MS002",
+      "name": "Hardcoded Secrets or API Keys",
+      "severity": "CRITICAL",
+      "category": "security",
+      "description": "API keys, secrets, or credentials hardcoded in source code can be extracted and abused. This violates security best practices.",
+      "message": "Potential hardcoded secret detected: '%s'. Secrets should not be committed to source code.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "(?i)(api[_-]?key|secret[_-]?key|client[_-]?secret|password)\\s*=\\s*\"[^\"]{8,}\"", "context": ""},
+        {"type": "code_pattern", "value": "AIza[0-9A-Za-z_-]{35}", "context": ""},
+        {"type": "code_pattern", "value": "-----BEGIN (RSA |EC )?PRIVATE KEY-----", "context": ""},
+        {"type": "code_pattern", "value": "(?i)firebase.*=\\s*\"[A-Za-z0-9_-]{20,}\"", "context": ""}
+      ],
+      "remediation": "Move secrets to environment variables, a secrets manager, or Android's encrypted SharedPreferences. Never commit secrets to version control.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9848633"
+    },
+    {
+      "id": "MS003",
+      "name": "Exported Components Without Protection",
+      "severity": "ERROR",
+      "category": "security",
+      "description": "Exported activities, services, and receivers without permission protection can be invoked by any app, creating security vulnerabilities.",
+      "message": "Exported component '%s' has no permission protection and may be accessible to other apps.",
+      "detection_patterns": [
+        {"type": "manifest_element", "value": "//activity[@android:exported='true'][not(@android:permission)]", "context": ""},
+        {"type": "manifest_element", "value": "//service[@android:exported='true'][not(@android:permission)]", "context": ""},
+        {"type": "manifest_element", "value": "//receiver[@android:exported='true'][not(@android:permission)]", "context": ""}
+      ],
+      "remediation": "Add android:permission attributes to exported components, or set android:exported='false' if the component does not need to be accessible externally.",
+      "policy_link": "https://developer.android.com/topic/security/best-practices"
+    },
+    {
+      "id": "MS004",
+      "name": "WebView JavaScript Interface Vulnerability",
+      "severity": "ERROR",
+      "category": "security",
+      "description": "Using addJavascriptInterface on WebViews loading external content can expose the app to code injection attacks.",
+      "message": "WebView uses addJavascriptInterface which can be exploited if loading untrusted content.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "addJavascriptInterface\\(", "context": ""},
+        {"type": "code_pattern", "value": "setAllowFileAccessFromFileURLs\\(true\\)|setAllowUniversalAccessFromFileURLs\\(true\\)", "context": ""}
+      ],
+      "remediation": "Avoid addJavascriptInterface with WebViews that load external content. Use WebMessagePort for safe communication. Disable file access from URLs.",
+      "policy_link": "https://developer.android.com/privacy-and-security/risks/webview-javascript"
+    },
+    {
+      "id": "DP008",
+      "name": "Accessibility Service Permission",
+      "severity": "CRITICAL",
+      "category": "dangerous_permissions",
+      "description": "AccessibilityService is restricted and must only be used for accessibility purposes. Misuse will result in app removal.",
+      "message": "App declares AccessibilityService. This is restricted to apps with genuine accessibility functionality.",
+      "detection_patterns": [
+        {"type": "manifest_element", "value": "//service[@android:permission='android.permission.BIND_ACCESSIBILITY_SERVICE']", "context": ""},
+        {"type": "code_pattern", "value": "AccessibilityService|onAccessibilityEvent|AccessibilityNodeInfo", "context": ""}
+      ],
+      "remediation": "Only use AccessibilityService for genuine accessibility purposes. Provide clear accessibility-related functionality documentation for review.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/10964491"
+    },
+    {
+      "id": "DP009",
+      "name": "VPN Service Permission",
+      "severity": "ERROR",
+      "category": "dangerous_permissions",
+      "description": "VPNService usage is restricted. Apps must be the primary VPN functionality provider and clearly disclose data handling.",
+      "message": "App uses VPNService. VPN apps must clearly disclose their data collection and handling in the Play listing.",
+      "detection_patterns": [
+        {"type": "manifest_element", "value": "//service[@android:permission='android.permission.BIND_VPN_SERVICE']", "context": ""},
+        {"type": "code_pattern", "value": "VpnService|establish\\(\\)|Builder.*addAddress", "context": ""}
+      ],
+      "remediation": "Ensure VPN functionality is the app's core purpose. Disclose all data handling in the app listing and privacy policy.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/9888170"
+    },
+    {
+      "id": "DP010",
+      "name": "Foreground Service Type Missing",
+      "severity": "ERROR",
+      "category": "dangerous_permissions",
+      "description": "Apps targeting Android 14+ must declare foregroundServiceType for all foreground services.",
+      "message": "Foreground service declared without foregroundServiceType attribute, required for Android 14+.",
+      "detection_patterns": [
+        {"type": "manifest_element", "value": "//service[.//action[@android:name='android.intent.action.FOREGROUND_SERVICE']]", "context": ""},
+        {"type": "manifest_attribute", "value": "service:android:foregroundServiceType", "context": "required_if_foreground"}
+      ],
+      "remediation": "Add android:foregroundServiceType to all <service> elements that run as foreground services. Valid types include: camera, connectedDevice, dataSync, health, location, mediaPlayback, mediaProjection, microphone, phoneCall, remoteMessaging, shortService, specialUse, systemExempted.",
+      "policy_link": "https://developer.android.com/about/versions/14/changes/foreground-service-types"
+    },
+    {
+      "id": "MV005",
+      "name": "Intent Filter Without BROWSABLE Category",
+      "severity": "INFO",
+      "category": "manifest_validation",
+      "description": "Deep link intent filters should include BROWSABLE category to be accessible from web browsers and other apps.",
+      "message": "Intent filter with VIEW action and data scheme lacks BROWSABLE category.",
+      "detection_patterns": [
+        {"type": "manifest_element", "value": "//intent-filter[action[@android:name='android.intent.action.VIEW']][data[@android:scheme]][not(category[@android:name='android.intent.category.BROWSABLE'])]", "context": ""}
+      ],
+      "remediation": "Add <category android:name='android.intent.category.BROWSABLE'/> to intent filters that handle deep links.",
+      "policy_link": "https://developer.android.com/training/app-links/deep-linking"
+    },
+    {
+      "id": "AD002",
+      "name": "Login Without Data Safety Disclosure",
+      "severity": "WARNING",
+      "category": "account_management",
+      "description": "Apps with login functionality should disclose authentication data collection in the Data Safety section.",
+      "message": "App has login functionality. Ensure authentication data collection is disclosed in the Data Safety section.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "LoginActivity|SignInActivity|FirebaseAuth|GoogleSignIn|signInWith", "context": ""},
+        {"type": "code_pattern", "value": "setPassword|getPassword|authenticate|credential", "context": ""}
+      ],
+      "remediation": "Declare authentication-related data collection (email, name, user IDs) in the Play Console Data Safety section.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/10787469"
+    },
+    {
+      "id": "SDK002",
+      "name": "Missing Play Core Library Update",
+      "severity": "WARNING",
+      "category": "sdk_compliance",
+      "description": "Apps using the Play Core library must use version 1.10.0+ to comply with the Play Core API requirements.",
+      "message": "App may be using an outdated version of the Play Core library. Version 1.10.0+ is required.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "com\\.google\\.android\\.play:core:[0-1]\\.[0-9]\\.", "context": "build.gradle"},
+        {"type": "code_pattern", "value": "play-core:1\\.[0-9]\\.", "context": "build.gradle"}
+      ],
+      "remediation": "Update the Play Core library to version 1.10.0 or later in your build.gradle dependencies.",
+      "policy_link": "https://developer.android.com/reference/com/google/android/play/core/release-notes"
+    },
+    {
+      "id": "SDK003",
+      "name": "Missing Ads SDK Consent Integration",
+      "severity": "ERROR",
+      "category": "sdk_compliance",
+      "description": "Apps using advertising SDKs must integrate a consent management platform for GDPR and privacy compliance.",
+      "message": "Advertising SDK detected without apparent consent management integration.",
+      "detection_patterns": [
+        {"type": "code_pattern", "value": "com\\.google\\.android\\.gms\\.ads|AdMob|MobileAds\\.initialize", "context": ""},
+        {"type": "code_pattern", "value": "com\\.facebook\\.ads|com\\.unity3d\\.ads|com\\.applovin", "context": ""}
+      ],
+      "remediation": "Integrate Google's User Messaging Platform (UMP) SDK or equivalent consent management solution. Initialize consent before loading ads.",
+      "policy_link": "https://support.google.com/googleplay/android-developer/answer/11112578"
+    }
+  ]
+}
