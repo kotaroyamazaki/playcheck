@@ -78,12 +78,3 @@ release:
 
   footer: |
     **Full Changelog**: https://github.com/kotaroyamazaki/playcheck/compare/{{ .PreviousTag }}...{{ .Tag }}
-
-brews:
-  - name: playcheck
-    homepage: https://github.com/kotaroyamazaki/playcheck
-    description: "Scan Android projects for Google Play Store compliance issues"
-    license: MIT
-    repository:
-      owner: kotaroyamazaki
-      name: homebrew-tap
