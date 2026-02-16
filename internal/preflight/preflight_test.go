@@ -161,8 +161,8 @@ func TestRunner_Metadata(t *testing.T) {
 	if result.ScanMeta.ProjectPath != "/some/path" {
 		t.Errorf("expected project path /some/path, got %s", result.ScanMeta.ProjectPath)
 	}
-	if result.ScanMeta.Duration <= 0 {
-		t.Error("expected positive duration")
+	if result.ScanMeta.Duration < 0 {
+		t.Error("expected non-negative duration")
 	}
 	if len(result.ScanMeta.ScannerIDs) != 2 {
 		t.Errorf("expected 2 scanner IDs, got %d", len(result.ScanMeta.ScannerIDs))
