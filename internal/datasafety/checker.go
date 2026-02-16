@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yourusername/playcheck/internal/preflight"
-	"github.com/yourusername/playcheck/pkg/utils"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/pkg/utils"
 )
 
 // Checker validates data safety compliance for Google Play Store requirements.

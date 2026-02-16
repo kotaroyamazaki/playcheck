@@ -3,7 +3,7 @@ package manifest
 import (
 	"testing"
 
-	"github.com/yourusername/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
 )
 
 func boolPtr(v bool) *bool { return &v }

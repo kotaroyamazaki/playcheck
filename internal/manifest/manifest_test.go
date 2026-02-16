@@ -3,7 +3,7 @@ package manifest
 import (
 	"testing"
 
-	"github.com/yourusername/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
 )
 
 const sampleManifest = `<?xml version="1.0" encoding="utf-8"?>

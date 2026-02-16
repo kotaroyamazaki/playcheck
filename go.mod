@@ -1,4 +1,4 @@
-module github.com/yourusername/playcheck
+module github.com/kotaroyamazaki/playcheck
 
 go 1.22.0
 

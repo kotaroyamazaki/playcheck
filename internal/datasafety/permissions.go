@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yourusername/playcheck/internal/preflight"
-	"github.com/yourusername/playcheck/pkg/utils"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/pkg/utils"
 )
 
 // permissionDisclosure maps dangerous Android permissions to required data safety disclosures.

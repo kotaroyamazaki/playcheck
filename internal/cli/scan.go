@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/yourusername/playcheck/internal/codescan"
-	"github.com/yourusername/playcheck/internal/datasafety"
-	"github.com/yourusername/playcheck/internal/manifest"
-	"github.com/yourusername/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/internal/codescan"
+	"github.com/kotaroyamazaki/playcheck/internal/datasafety"
+	"github.com/kotaroyamazaki/playcheck/internal/manifest"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 )

@@ -1,6 +1,6 @@
 package manifest
 
-import "github.com/yourusername/playcheck/internal/preflight"
+import "github.com/kotaroyamazaki/playcheck/internal/preflight"
 
 // Rule IDs for manifest validation checks.
 const (

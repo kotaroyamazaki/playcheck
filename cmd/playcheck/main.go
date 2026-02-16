@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yourusername/playcheck/internal/cli"
+	"github.com/kotaroyamazaki/playcheck/internal/cli"
 )
 
 func main() {

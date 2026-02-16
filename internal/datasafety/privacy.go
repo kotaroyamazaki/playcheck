@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yourusername/playcheck/internal/preflight"
-	"github.com/yourusername/playcheck/pkg/utils"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/pkg/utils"
 )
 
 // checkPrivacyPolicy checks for privacy policy URL presence in both

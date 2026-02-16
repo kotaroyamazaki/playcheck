@@ -1,6 +1,6 @@
 package codescan
 
-import "github.com/yourusername/playcheck/internal/preflight"
+import "github.com/kotaroyamazaki/playcheck/internal/preflight"
 
 // Rule IDs for code scanning checks.
 const (

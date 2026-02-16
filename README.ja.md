@@ -20,13 +20,13 @@ Google Play Store申請前に**あらゆるAndroidプロジェクト**のコン�
 ### Go installから
 
 ```bash
-go install github.com/yourusername/playcheck/cmd/scanner@latest
+go install github.com/kotaroyamazaki/playcheck/cmd/playcheck@latest
 ```
 
 ### ソースからビルド
 
 ```bash
-git clone https://github.com/yourusername/playcheck.git
+git clone https://github.com/kotaroyamazaki/playcheck.git
 cd playcheck
 go build -o playcheck ./cmd/scanner
 ```

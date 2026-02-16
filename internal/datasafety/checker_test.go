@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/yourusername/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
 )
 
 func setupTestProject(t *testing.T, files map[string]string) string {

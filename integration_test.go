@@ -5,10 +5,10 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/yourusername/playcheck/internal/codescan"
-	"github.com/yourusername/playcheck/internal/datasafety"
-	"github.com/yourusername/playcheck/internal/manifest"
-	"github.com/yourusername/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/internal/codescan"
+	"github.com/kotaroyamazaki/playcheck/internal/datasafety"
+	"github.com/kotaroyamazaki/playcheck/internal/manifest"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
 )
 
 func projectRoot() string {

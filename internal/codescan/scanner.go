@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/yourusername/playcheck/internal/preflight"
-	"github.com/yourusername/playcheck/pkg/utils"
+	"github.com/kotaroyamazaki/playcheck/internal/preflight"
+	"github.com/kotaroyamazaki/playcheck/pkg/utils"
 )
 
 // Scanner scans Kotlin and Java source files for Play Store compliance issues.
