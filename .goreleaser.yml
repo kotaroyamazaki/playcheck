@@ -79,7 +79,7 @@ release:
   footer: |
     **Full Changelog**: https://github.com/kotaroyamazaki/playcheck/compare/{{ .PreviousTag }}...{{ .Tag }}
 
-homebrew:
+brews:
   - name: playcheck
     homepage: https://github.com/kotaroyamazaki/playcheck
     description: "Scan Android projects for Google Play Store compliance issues"

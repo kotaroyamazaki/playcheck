@@ -234,7 +234,7 @@ internal/
   codescan/             Kotlin/Java source code scanner
   datasafety/           Data safety and privacy compliance checker
   manifest/             AndroidManifest.xml parser and validator
-  policies/             Embedded policy rule database (28+ rules)
+  policies/             Embedded policy rule database (31+ rules)
   preflight/            Core types, runner, and report formatting
 pkg/utils/              File walking utilities
 testdata/
