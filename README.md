@@ -11,7 +11,7 @@ English | [日本語](README.ja.md)
 - **Manifest validation** - SDK version checks, dangerous permissions, exported components, cleartext traffic
 - **Code scanning** - Detects HTTP URLs, SMS API usage, advertising IDs, weak cryptography, third-party SDK data collection
 - **Data safety compliance** - Privacy policy detection, account deletion requirements, permission disclosure checks, user consent validation
-- **28+ policy rules** - Covers dangerous permissions, privacy, SDK compliance, account management, security, and more
+- **31+ policy rules** - Covers dangerous permissions, privacy, SDK compliance, account management, security, and more
 - **Multiple output formats** - Colored terminal output and JSON for CI/CD integration
 - **Severity filtering** - Filter findings by severity level (critical, warning, info)
 
@@ -26,7 +26,7 @@ Or build from source:
 ```bash
 git clone https://github.com/kotaroyamazaki/playcheck.git
 cd playcheck
-go build -o playcheck ./cmd/scanner
+go build -o playcheck ./cmd/playcheck
 ```
 
 ## Usage
@@ -65,8 +65,8 @@ playcheck scan ./my-app --severity warn
 
 ### Exit codes
 
-- `0` - No critical issues found
-- `1` - Critical issues detected that must be resolved before Play Store submission
+- `0` - No critical or error-level issues found
+- `1` - Critical or error-level issues detected that must be resolved before Play Store submission
 
 ## Supported Rules
 
@@ -154,6 +154,12 @@ playcheck scan ./my-app --severity warn
 |----|------|----------|
 | MP002 | Non-Play Billing for Digital Goods | CRITICAL |
 
+### Content Policy (MC001)
+
+| ID | Rule | Severity |
+|----|------|----------|
+| MC001 | Content Rating Missing | WARNING |
+
 ## Output Examples
 
 ### Terminal output
@@ -222,7 +228,7 @@ RESULT: FAIL - Critical issues must be resolved before submission.
 ## Project Structure
 
 ```
-cmd/scanner/            CLI entry point
+cmd/playcheck/          CLI entry point
 internal/
   cli/                  Cobra command definitions
   codescan/             Kotlin/Java source code scanner

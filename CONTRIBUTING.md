@@ -7,7 +7,7 @@ Thank you for your interest in contributing to playcheck! We welcome contributio
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally
    ```bash
-   git clone https://github.com/yourusername/playcheck.git
+   git clone https://github.com/kotaroyamazaki/playcheck.git
    cd playcheck
    ```
 3. **Create a branch** for your changes
@@ -19,13 +19,13 @@ Thank you for your interest in contributing to playcheck! We welcome contributio
 
 ### Prerequisites
 
-- Go 1.21 or higher
+- Go 1.22 or higher
 - Git
 
 ### Building from Source
 
 ```bash
-go build -o playcheck ./cmd/scanner
+go build -o playcheck ./cmd/playcheck
 ```
 
 ### Running Tests

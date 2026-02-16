@@ -28,7 +28,7 @@ go install github.com/kotaroyamazaki/playcheck/cmd/playcheck@latest
 ```bash
 git clone https://github.com/kotaroyamazaki/playcheck.git
 cd playcheck
-go build -o playcheck ./cmd/scanner
+go build -o playcheck ./cmd/playcheck
 ```
 
 ## 使い方
@@ -86,9 +86,9 @@ fi
 | DP005 | ERROR | 広範なストレージアクセス（MANAGE_EXTERNAL_STORAGE） |
 | DP006 | WARNING | 正確なアラームパーミッション |
 | DP007 | WARNING | 全パッケージクエリパーミッション |
-| DP008 | WARNING | アクセシビリティサービス使用 |
-| DP009 | WARNING | VPN サービス |
-| DP010 | WARNING | フォアグラウンドサービスタイプ |
+| DP008 | CRITICAL | アクセシビリティサービス使用 |
+| DP009 | ERROR | VPN サービス |
+| DP010 | ERROR | フォアグラウンドサービスタイプ |
 
 ### プライバシー＆データ安全性（4ルール）
 
@@ -119,9 +119,9 @@ fi
 
 | ルールID | 重大度 | 説明 |
 |---------|--------|------|
-| MV001 | WARNING | アプリアイコンの欠落 |
-| MV002 | ERROR | デバッグ可能なビルド |
-| MV003 | WARNING | バージョンコードの欠落 |
+| MV001 | ERROR | アプリアイコンの欠落 |
+| MV002 | CRITICAL | デバッグ可能なビルド |
+| MV003 | ERROR | バージョンコードの欠落 |
 | MV004 | WARNING | バックアップルールの欠落 |
 | MV005 | WARNING | インテントフィルターの問題 |
 
@@ -135,7 +135,7 @@ fi
 
 | ルールID | 重大度 | 説明 |
 |---------|--------|------|
-| MP002 | ERROR | Play Store以外の課金システム |
+| MP002 | CRITICAL | Play Store以外の課金システム |
 
 ### セキュリティ（4ルール）
 
@@ -230,7 +230,7 @@ Summary:
 
 ```
 playcheck/
-├── cmd/scanner/              # CLIエントリポイント
+├── cmd/playcheck/            # CLIエントリポイント
 ├── internal/
 │   ├── cli/                  # Cobraコマンド実装
 │   ├── preflight/            # コアオーケストレーション
@@ -313,9 +313,9 @@ MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照してください
 
 ## サポート
 
-- 🐛 バグ報告: [GitHub Issues](https://github.com/yourusername/playcheck/issues)
-- 💡 機能リクエスト: [GitHub Issues](https://github.com/yourusername/playcheck/issues)
-- 📖 ドキュメント: [GitHub Wiki](https://github.com/yourusername/playcheck/wiki)
+- 🐛 バグ報告: [GitHub Issues](https://github.com/kotaroyamazaki/playcheck/issues)
+- 💡 機能リクエスト: [GitHub Issues](https://github.com/kotaroyamazaki/playcheck/issues)
+- 📖 ドキュメント: [GitHub Wiki](https://github.com/kotaroyamazaki/playcheck/wiki)
 
 ## 免責事項
 

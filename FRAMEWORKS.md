@@ -273,7 +273,7 @@ Add playcheck to your CI pipeline:
 # GitHub Actions example
 - name: Play Store Compliance Check
   run: |
-    go install github.com/yourusername/playcheck/cmd/scanner@latest
+    go install github.com/kotaroyamazaki/playcheck/cmd/playcheck@latest
     playcheck scan ./android --format json --output report.json
 
 - name: Fail on critical issues

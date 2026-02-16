@@ -7,7 +7,7 @@ before:
 
 builds:
   - id: playcheck
-    main: ./cmd/scanner
+    main: ./cmd/playcheck
     binary: playcheck
     env:
       - CGO_ENABLED=0
@@ -58,7 +58,7 @@ changelog:
 
 release:
   github:
-    owner: yourusername
+    owner: kotaroyamazaki
     name: playcheck
   draft: false
   prerelease: auto
@@ -73,17 +73,17 @@ release:
     Download the appropriate binary for your platform below, or use:
 
     ```bash
-    go install github.com/yourusername/playcheck/cmd/scanner@{{.Version}}
+    go install github.com/kotaroyamazaki/playcheck/cmd/playcheck@{{.Version}}
     ```
 
   footer: |
-    **Full Changelog**: https://github.com/yourusername/playcheck/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/kotaroyamazaki/playcheck/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 homebrew:
   - name: playcheck
-    homepage: https://github.com/yourusername/playcheck
+    homepage: https://github.com/kotaroyamazaki/playcheck
     description: "Scan Android projects for Google Play Store compliance issues"
     license: MIT
     repository:
-      owner: yourusername
+      owner: kotaroyamazaki
       name: homebrew-tap
