@@ -23,7 +23,7 @@ What actually happened.
 ## Environment
 - OS: [e.g., macOS 14.0, Ubuntu 22.04]
 - Go Version: [e.g., 1.21.5]
-- playcheck Version: [e.g., 1.0.0]
+- playcheck Version: [e.g., 0.1.0]
 
 ## Sample Project
 If possible, provide a minimal Android project that reproduces the issue, or describe the project structure.
