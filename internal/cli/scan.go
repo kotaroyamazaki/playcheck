@@ -64,7 +64,7 @@ func runScan(projectPath string, opts *scanOptions) error {
 	runner := preflight.NewDefaultRunner(func(r *preflight.Runner) {
 		r.RegisterScanner(manifest.NewScanner())
 		r.RegisterScanner(codescan.NewScanner())
-		r.RegisterScanner(&datasafety.Checker{})
+		r.RegisterScanner(datasafety.NewChecker())
 	})
 	checkers := runner.Checkers()
 
@@ -103,6 +103,13 @@ func runScan(projectPath string, opts *scanOptions) error {
 	}
 
 	if opts.output != "" {
+		// Validate output path to prevent accidental overwrites.
+		if outInfo, err := os.Stat(opts.output); err == nil {
+			if outInfo.IsDir() {
+				return fmt.Errorf("output path is a directory: %s", opts.output)
+			}
+			fmt.Fprintf(os.Stderr, "Warning: overwriting existing file %s\n", opts.output)
+		}
 		if err := os.WriteFile(opts.output, outputData, 0644); err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}

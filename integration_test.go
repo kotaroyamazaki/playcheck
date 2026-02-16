@@ -20,7 +20,7 @@ func newFullRunner() *preflight.Runner {
 	return preflight.NewDefaultRunner(func(r *preflight.Runner) {
 		r.RegisterScanner(manifest.NewScanner())
 		r.RegisterScanner(codescan.NewScanner())
-		r.RegisterScanner(&datasafety.Checker{})
+		r.RegisterScanner(datasafety.NewChecker())
 	})
 }
 

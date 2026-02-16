@@ -1,7 +1,6 @@
 package datasafety
 
 import (
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -191,7 +190,7 @@ func checkRuntimePermissions(m manifestInfo, projectDir string) []preflight.Find
 
 	hasRuntimeRequest := false
 	for _, cf := range codeFiles {
-		data, err := os.ReadFile(cf)
+		data, err := utils.ReadFileWithLimit(cf)
 		if err != nil {
 			continue
 		}
@@ -293,6 +292,37 @@ var thirdPartySDKs = []sdkInfo{
 	},
 }
 
+// permissionAPIs maps permissions to common API usage patterns for cross-referencing.
+var permissionAPIs = map[string][]*regexp.Regexp{
+	"android.permission.CAMERA": {
+		regexp.MustCompile(`Camera|CameraManager|CameraDevice|CameraX|camera2`),
+	},
+	"android.permission.RECORD_AUDIO": {
+		regexp.MustCompile(`MediaRecorder|AudioRecord|SpeechRecognizer`),
+	},
+	"android.permission.READ_CONTACTS": {
+		regexp.MustCompile(`ContactsContract|ContactsProvider|READ_CONTACTS`),
+	},
+	"android.permission.ACCESS_FINE_LOCATION": {
+		regexp.MustCompile(`LocationManager|FusedLocationProvider|LocationRequest|getLastKnownLocation|requestLocationUpdates`),
+	},
+	"android.permission.ACCESS_COARSE_LOCATION": {
+		regexp.MustCompile(`LocationManager|FusedLocationProvider|LocationRequest|getLastKnownLocation|requestLocationUpdates`),
+	},
+	"android.permission.READ_SMS": {
+		regexp.MustCompile(`SmsManager|Telephony\.Sms|SmsMessage`),
+	},
+	"android.permission.READ_CALL_LOG": {
+		regexp.MustCompile(`CallLog|CallLog\.Calls`),
+	},
+	"android.permission.READ_CALENDAR": {
+		regexp.MustCompile(`CalendarContract|CalendarProvider`),
+	},
+	"android.permission.BODY_SENSORS": {
+		regexp.MustCompile(`SensorManager|Sensor\.TYPE_HEART|HealthServicesClient`),
+	},
+}
+
 // crossReferencePermissionsWithCode checks that permissions declared in manifest
 // are actually used in code, and flags unused dangerous permissions.
 func crossReferencePermissionsWithCode(manifests []manifestInfo, projectDir string) []preflight.Finding {
@@ -306,7 +336,7 @@ func crossReferencePermissionsWithCode(manifests []manifestInfo, projectDir stri
 	// Build a set of all code content for searching.
 	var allCode strings.Builder
 	for _, cf := range codeFiles {
-		data, err := os.ReadFile(cf)
+		data, err := utils.ReadFileWithLimit(cf)
 		if err != nil {
 			continue
 		}
@@ -314,37 +344,6 @@ func crossReferencePermissionsWithCode(manifests []manifestInfo, projectDir stri
 		allCode.WriteByte('\n')
 	}
 	codeContent := allCode.String()
-
-	// Map of permission -> common API usage patterns.
-	permissionAPIs := map[string][]*regexp.Regexp{
-		"android.permission.CAMERA": {
-			regexp.MustCompile(`Camera|CameraManager|CameraDevice|CameraX|camera2`),
-		},
-		"android.permission.RECORD_AUDIO": {
-			regexp.MustCompile(`MediaRecorder|AudioRecord|SpeechRecognizer`),
-		},
-		"android.permission.READ_CONTACTS": {
-			regexp.MustCompile(`ContactsContract|ContactsProvider|READ_CONTACTS`),
-		},
-		"android.permission.ACCESS_FINE_LOCATION": {
-			regexp.MustCompile(`LocationManager|FusedLocationProvider|LocationRequest|getLastKnownLocation|requestLocationUpdates`),
-		},
-		"android.permission.ACCESS_COARSE_LOCATION": {
-			regexp.MustCompile(`LocationManager|FusedLocationProvider|LocationRequest|getLastKnownLocation|requestLocationUpdates`),
-		},
-		"android.permission.READ_SMS": {
-			regexp.MustCompile(`SmsManager|Telephony\.Sms|SmsMessage`),
-		},
-		"android.permission.READ_CALL_LOG": {
-			regexp.MustCompile(`CallLog|CallLog\.Calls`),
-		},
-		"android.permission.READ_CALENDAR": {
-			regexp.MustCompile(`CalendarContract|CalendarProvider`),
-		},
-		"android.permission.BODY_SENSORS": {
-			regexp.MustCompile(`SensorManager|Sensor\.TYPE_HEART|HealthServicesClient`),
-		},
-	}
 
 	for _, m := range manifests {
 		relPath, _ := filepath.Rel(projectDir, m.FilePath)

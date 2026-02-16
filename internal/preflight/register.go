@@ -1,14 +1,14 @@
 package preflight
 
-// NewDefaultRunner creates a Runner and registers scanners using the provided
+// NewDefaultRunner creates a Runner and registers checkers using the provided
 // registration function. This avoids import cycles by letting the caller
-// (typically the CLI or main package) provide the scanner instances.
+// (typically the CLI or main package) provide the checker instances.
 //
 // Usage:
 //
 //	runner := preflight.NewDefaultRunner(func(r *Runner) {
 //	    r.RegisterScanner(manifest.NewScanner())
-//	    r.RegisterScanner(&datasafety.Checker{})
+//	    r.RegisterScanner(datasafety.NewChecker())
 //	    r.RegisterScanner(codescan.NewScanner())
 //	})
 func NewDefaultRunner(register func(*Runner)) *Runner {

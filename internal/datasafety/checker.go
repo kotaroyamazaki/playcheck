@@ -1,7 +1,6 @@
 package datasafety
 
 import (
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -12,6 +11,11 @@ import (
 
 // Checker validates data safety compliance for Google Play Store requirements.
 type Checker struct{}
+
+// NewChecker creates a new data safety Checker.
+func NewChecker() *Checker {
+	return &Checker{}
+}
 
 func (c *Checker) ID() string          { return "DATA_SAFETY" }
 func (c *Checker) Name() string        { return "Data Safety Compliance" }
@@ -77,6 +81,38 @@ type manifestInfo struct {
 var permissionRe = regexp.MustCompile(`<uses-permission\s+android:name="([^"]+)"`)
 var metadataNameRe = regexp.MustCompile(`<meta-data\s+android:name="([^"]+)"`)
 
+// Account creation/deletion detection patterns.
+var createAccountPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)createUser|signUp|registerUser|createAccount|registerAccount`),
+	regexp.MustCompile(`(?i)FirebaseAuth\s*\.\s*getInstance\(\)\s*\.\s*createUser`),
+	regexp.MustCompile(`(?i)\.createUserWithEmailAndPassword\(`),
+}
+
+var deleteAccountPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)deleteUser|deleteAccount|removeAccount|deactivateAccount`),
+	regexp.MustCompile(`(?i)\.delete\(\)\s*//.*account`),
+	regexp.MustCompile(`(?i)FirebaseAuth.*\.currentUser.*\.delete\(`),
+	regexp.MustCompile(`(?i)account.?delet`),
+}
+
+// Data collection and consent detection patterns.
+var dataCollectionPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`getDeviceId\(`),
+	regexp.MustCompile(`getAdvertisingIdInfo\(`),
+	regexp.MustCompile(`ANDROID_ID`),
+	regexp.MustCompile(`getAccounts\(`),
+	regexp.MustCompile(`getLastKnownLocation\(`),
+	regexp.MustCompile(`requestLocationUpdates\(`),
+}
+
+var consentPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)consent`),
+	regexp.MustCompile(`(?i)user.?agre`),
+	regexp.MustCompile(`(?i)opt.?in`),
+	regexp.MustCompile(`(?i)permission.?dialog`),
+	regexp.MustCompile(`(?i)privacy.?accept`),
+}
+
 func parseManifests(paths []string) []manifestInfo {
 	var results []manifestInfo
 	for _, p := range paths {
@@ -84,7 +120,7 @@ func parseManifests(paths []string) []manifestInfo {
 			FilePath: p,
 			HasMeta:  make(map[string]bool),
 		}
-		data, err := os.ReadFile(p)
+		data, err := utils.ReadFileWithLimit(p)
 		if err != nil {
 			continue
 		}
@@ -110,7 +146,7 @@ func checkSDKDisclosures(projectDir string) []preflight.Finding {
 	}
 
 	for _, gf := range gradleFiles {
-		data, err := os.ReadFile(gf)
+		data, err := utils.ReadFileWithLimit(gf)
 		if err != nil {
 			continue
 		}
@@ -150,21 +186,8 @@ func checkAccountDeletion(projectDir string) []preflight.Finding {
 	var hasDeleteAccount bool
 	var createAccountLoc preflight.Location
 
-	createPatterns := []*regexp.Regexp{
-		regexp.MustCompile(`(?i)createUser|signUp|registerUser|createAccount|registerAccount`),
-		regexp.MustCompile(`(?i)FirebaseAuth\s*\.\s*getInstance\(\)\s*\.\s*createUser`),
-		regexp.MustCompile(`(?i)\.createUserWithEmailAndPassword\(`),
-	}
-
-	deletePatterns := []*regexp.Regexp{
-		regexp.MustCompile(`(?i)deleteUser|deleteAccount|removeAccount|deactivateAccount`),
-		regexp.MustCompile(`(?i)\.delete\(\)\s*//.*account`),
-		regexp.MustCompile(`(?i)FirebaseAuth.*\.currentUser.*\.delete\(`),
-		regexp.MustCompile(`(?i)account.?delet`),
-	}
-
 	for _, cf := range codeFiles {
-		data, err := os.ReadFile(cf)
+		data, err := utils.ReadFileWithLimit(cf)
 		if err != nil {
 			continue
 		}
@@ -172,7 +195,7 @@ func checkAccountDeletion(projectDir string) []preflight.Finding {
 		relPath, _ := filepath.Rel(projectDir, cf)
 
 		if !hasCreateAccount {
-			for _, p := range createPatterns {
+			for _, p := range createAccountPatterns {
 				loc := p.FindStringIndex(content)
 				if loc != nil {
 					hasCreateAccount = true
@@ -183,7 +206,7 @@ func checkAccountDeletion(projectDir string) []preflight.Finding {
 			}
 		}
 
-		for _, p := range deletePatterns {
+		for _, p := range deleteAccountPatterns {
 			if p.MatchString(content) {
 				hasDeleteAccount = true
 				break
@@ -227,25 +250,8 @@ func checkUserConsent(projectDir string) []preflight.Finding {
 		return findings
 	}
 
-	dataCollectionPatterns := []*regexp.Regexp{
-		regexp.MustCompile(`getDeviceId\(`),
-		regexp.MustCompile(`getAdvertisingIdInfo\(`),
-		regexp.MustCompile(`ANDROID_ID`),
-		regexp.MustCompile(`getAccounts\(`),
-		regexp.MustCompile(`getLastKnownLocation\(`),
-		regexp.MustCompile(`requestLocationUpdates\(`),
-	}
-
-	consentPatterns := []*regexp.Regexp{
-		regexp.MustCompile(`(?i)consent`),
-		regexp.MustCompile(`(?i)user.?agre`),
-		regexp.MustCompile(`(?i)opt.?in`),
-		regexp.MustCompile(`(?i)permission.?dialog`),
-		regexp.MustCompile(`(?i)privacy.?accept`),
-	}
-
 	for _, cf := range codeFiles {
-		data, err := os.ReadFile(cf)
+		data, err := utils.ReadFileWithLimit(cf)
 		if err != nil {
 			continue
 		}

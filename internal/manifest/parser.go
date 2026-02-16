@@ -5,10 +5,13 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/kotaroyamazaki/playcheck/pkg/utils"
 )
 
 // AndroidManifest represents the parsed AndroidManifest.xml.
@@ -119,7 +122,7 @@ func (m *AndroidManifest) FilePath() string {
 
 // ParseFile parses an AndroidManifest.xml file at the given path.
 func ParseFile(path string) (*AndroidManifest, error) {
-	data, err := os.ReadFile(path)
+	data, err := utils.ReadFileWithLimit(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading manifest: %w", err)
 	}
@@ -156,8 +159,9 @@ func Parse(data []byte) (*AndroidManifest, error) {
 	lineOffsets := buildLineOffsets(data)
 
 	decoder := xml.NewDecoder(bytes.NewReader(data))
-	decoder.Strict = false
-	decoder.AutoClose = xml.HTMLAutoClose
+	// Use strict mode to reject malformed XML that could cause
+	// security-relevant attributes to be silently misinterpreted.
+	decoder.Strict = true
 
 	var elementStack []string
 
@@ -319,17 +323,26 @@ func Parse(data []byte) (*AndroidManifest, error) {
 	return m, nil
 }
 
+// parseIntAttr parses an integer attribute value, logging a warning on failure.
+func parseIntAttr(attrName, value string) int {
+	n, err := strconv.Atoi(value)
+	if err != nil {
+		log.Printf("warning: non-numeric %s value %q: %v", attrName, value, err)
+	}
+	return n
+}
+
 func (m *AndroidManifest) parseManifestAttrs(attrs []xml.Attr) {
 	for _, attr := range attrs {
 		switch attr.Name.Local {
 		case "package":
 			m.Package = attr.Value
 		case "versionCode":
-			m.VersionCode, _ = strconv.Atoi(attr.Value)
+			m.VersionCode = parseIntAttr("versionCode", attr.Value)
 		case "versionName":
 			m.VersionName = attr.Value
 		case "compileSdkVersion":
-			m.CompileSdkVersion, _ = strconv.Atoi(attr.Value)
+			m.CompileSdkVersion = parseIntAttr("compileSdkVersion", attr.Value)
 		}
 	}
 }
@@ -338,9 +351,9 @@ func (m *AndroidManifest) parseUsesSdkAttrs(attrs []xml.Attr) {
 	for _, attr := range attrs {
 		switch attr.Name.Local {
 		case "minSdkVersion":
-			m.MinSdkVersion, _ = strconv.Atoi(attr.Value)
+			m.MinSdkVersion = parseIntAttr("minSdkVersion", attr.Value)
 		case "targetSdkVersion":
-			m.TargetSdkVersion, _ = strconv.Atoi(attr.Value)
+			m.TargetSdkVersion = parseIntAttr("targetSdkVersion", attr.Value)
 		}
 	}
 }
@@ -361,7 +374,7 @@ func parsePermission(attrs []xml.Attr, line int) Permission {
 		case "name":
 			p.Name = attr.Value
 		case "maxSdkVersion":
-			p.MaxSdk, _ = strconv.Atoi(attr.Value)
+			p.MaxSdk = parseIntAttr("maxSdkVersion", attr.Value)
 		case "required":
 			p.Required = strings.EqualFold(attr.Value, "true")
 		}

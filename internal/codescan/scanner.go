@@ -93,6 +93,15 @@ func (s *Scanner) Run(projectDir string) (*preflight.CheckResult, error) {
 
 // scanFile scans a single file against all compiled rules and returns findings.
 func (s *Scanner) scanFile(filePath, projectDir string) []preflight.Finding {
+	// Check file size before opening to prevent memory exhaustion.
+	info, err := os.Stat(filePath)
+	if err != nil {
+		return nil
+	}
+	if info.Size() > utils.MaxFileSize {
+		return nil
+	}
+
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil

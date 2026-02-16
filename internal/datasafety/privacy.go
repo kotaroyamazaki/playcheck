@@ -2,7 +2,6 @@ package datasafety
 
 import (
 	"encoding/xml"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -51,7 +50,7 @@ var privacyURLPatterns = []*regexp.Regexp{
 // checkManifestPrivacyPolicy checks AndroidManifest.xml files for privacy policy references.
 func checkManifestPrivacyPolicy(manifests []string, projectDir string) bool {
 	for _, m := range manifests {
-		data, err := os.ReadFile(m)
+		data, err := utils.ReadFileWithLimit(m)
 		if err != nil {
 			continue
 		}
@@ -90,7 +89,7 @@ func checkStringsPrivacyPolicy(projectDir string) bool {
 			continue
 		}
 
-		data, err := os.ReadFile(xf)
+		data, err := utils.ReadFileWithLimit(xf)
 		if err != nil {
 			continue
 		}

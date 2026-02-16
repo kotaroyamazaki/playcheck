@@ -3,6 +3,7 @@ package datasafety
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kotaroyamazaki/playcheck/internal/preflight"
@@ -351,10 +352,10 @@ func TestCheckPermissionDisclosures(t *testing.T) {
 	hasCameraDisclosure := false
 	for _, f := range findings {
 		if f.CheckID == "PDS002" {
-			if containsString(f.Description, "Text messages") {
+			if strings.Contains(f.Description, "Text messages") {
 				hasSMSDisclosure = true
 			}
-			if containsString(f.Description, "Photos/Videos") {
+			if strings.Contains(f.Description, "Photos/Videos") {
 				hasCameraDisclosure = true
 			}
 		}
@@ -367,15 +368,300 @@ func TestCheckPermissionDisclosures(t *testing.T) {
 	}
 }
 
-func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsSubstring(s, substr))
-}
+// --- Tests for checkSDKDisclosures ---
 
-func containsSubstring(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
+func TestCheckSDKDisclosures_FirebaseAnalytics(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"app/build.gradle": `plugins {
+    id 'com.android.application'
+}
+dependencies {
+    implementation 'com.google.firebase:firebase-analytics:21.5.0'
+    implementation 'com.google.firebase:firebase-crashlytics:18.6.0'
+}`,
+	})
+
+	findings := checkSDKDisclosures(dir)
+	if len(findings) == 0 {
+		t.Fatal("expected findings for Firebase SDK dependencies")
+	}
+
+	hasAnalytics := false
+	hasCrashlytics := false
+	for _, f := range findings {
+		if f.CheckID == "SDK001" {
+			if strings.Contains(f.Description, "Firebase Analytics") {
+				hasAnalytics = true
+			}
+			if strings.Contains(f.Description, "Firebase Crashlytics") {
+				hasCrashlytics = true
+			}
 		}
 	}
-	return false
+	if !hasAnalytics {
+		t.Error("expected finding for Firebase Analytics SDK")
+	}
+	if !hasCrashlytics {
+		t.Error("expected finding for Firebase Crashlytics SDK")
+	}
 }
+
+func TestCheckSDKDisclosures_NoGradleFiles(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"Main.java": `class Main {}`,
+	})
+
+	findings := checkSDKDisclosures(dir)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings when no gradle files, got %d", len(findings))
+	}
+}
+
+func TestCheckSDKDisclosures_CleanGradle(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"app/build.gradle": `plugins {
+    id 'com.android.application'
+}
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}`,
+	})
+
+	findings := checkSDKDisclosures(dir)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings for clean gradle, got %d", len(findings))
+	}
+}
+
+func TestCheckSDKDisclosures_MultipleSDKs(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"app/build.gradle.kts": `dependencies {
+    implementation("com.facebook.android:facebook-android-sdk:16.0.0")
+    implementation("com.adjust.sdk:adjust-android:4.38.0")
+    implementation("com.stripe:stripe-android:20.30.0")
+}`,
+	})
+
+	findings := checkSDKDisclosures(dir)
+	if len(findings) < 3 {
+		t.Errorf("expected at least 3 findings for multiple SDKs, got %d", len(findings))
+	}
+}
+
+// --- Tests for crossReferencePermissionsWithCode ---
+
+func TestCrossReferencePermissions_UsedInCode(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"Main.java": `package com.example;
+import android.hardware.camera2.CameraManager;
+public class Main {
+    public void open() {
+        CameraManager cm = getSystemService(CameraManager.class);
+    }
+}`,
+	})
+
+	manifests := []manifestInfo{
+		{
+			FilePath:    filepath.Join(dir, "AndroidManifest.xml"),
+			Permissions: []string{"android.permission.CAMERA"},
+			HasMeta:     map[string]bool{},
+		},
+	}
+
+	findings := crossReferencePermissionsWithCode(manifests, dir)
+	for _, f := range findings {
+		if f.CheckID == "SDK004" && strings.Contains(f.Description, "CAMERA") {
+			t.Error("did not expect unused CAMERA finding when CameraManager is in code")
+		}
+	}
+}
+
+func TestCrossReferencePermissions_NotUsedInCode(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"Main.java": `package com.example;
+public class Main {
+    public void doNothing() {}
+}`,
+	})
+
+	manifests := []manifestInfo{
+		{
+			FilePath:    filepath.Join(dir, "AndroidManifest.xml"),
+			Permissions: []string{"android.permission.CAMERA"},
+			HasMeta:     map[string]bool{},
+		},
+	}
+
+	findings := crossReferencePermissionsWithCode(manifests, dir)
+	found := false
+	for _, f := range findings {
+		if f.CheckID == "SDK004" && strings.Contains(f.Description, "CAMERA") {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected SDK004 finding for unused CAMERA permission")
+	}
+}
+
+func TestCrossReferencePermissions_NonDangerousPermission(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"Main.java": `class Main {}`,
+	})
+
+	manifests := []manifestInfo{
+		{
+			FilePath:    "/test/AndroidManifest.xml",
+			Permissions: []string{"android.permission.INTERNET"},
+			HasMeta:     map[string]bool{},
+		},
+	}
+
+	findings := crossReferencePermissionsWithCode(manifests, dir)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings for non-dangerous permission, got %d", len(findings))
+	}
+}
+
+// --- Tests for checkRuntimePermissions ---
+
+func TestCheckRuntimePermissions_WithRequest(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"Main.java": `package com.example;
+public class Main {
+    public void askPerms() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
+    }
+}`,
+	})
+
+	m := manifestInfo{
+		FilePath:    filepath.Join(dir, "AndroidManifest.xml"),
+		Permissions: []string{"android.permission.CAMERA"},
+		HasMeta:     map[string]bool{},
+	}
+
+	findings := checkRuntimePermissions(m, dir)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings when runtime permission request present, got %d", len(findings))
+	}
+}
+
+func TestCheckRuntimePermissions_WithCheckSelfPermission(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"Main.java": `package com.example;
+public class Main {
+    public void check() {
+        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+    }
+}`,
+	})
+
+	m := manifestInfo{
+		FilePath:    filepath.Join(dir, "AndroidManifest.xml"),
+		Permissions: []string{"android.permission.CAMERA"},
+		HasMeta:     map[string]bool{},
+	}
+
+	findings := checkRuntimePermissions(m, dir)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings when checkSelfPermission present, got %d", len(findings))
+	}
+}
+
+func TestCheckRuntimePermissions_Missing(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"Main.java": `package com.example;
+public class Main {
+    public void doNothing() {}
+}`,
+	})
+
+	m := manifestInfo{
+		FilePath:    filepath.Join(dir, "AndroidManifest.xml"),
+		Permissions: []string{"android.permission.CAMERA"},
+		HasMeta:     map[string]bool{},
+	}
+
+	findings := checkRuntimePermissions(m, dir)
+	found := false
+	for _, f := range findings {
+		if f.CheckID == "PDS004" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected PDS004 finding for missing runtime permission request")
+	}
+}
+
+func TestCheckRuntimePermissions_NoDangerousPerms(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"Main.java": `class Main {}`,
+	})
+
+	m := manifestInfo{
+		FilePath:    filepath.Join(dir, "AndroidManifest.xml"),
+		Permissions: []string{"android.permission.INTERNET"},
+		HasMeta:     map[string]bool{},
+	}
+
+	findings := checkRuntimePermissions(m, dir)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings when no dangerous permissions, got %d", len(findings))
+	}
+}
+
+// --- Tests for parseManifests ---
+
+func TestParseManifests(t *testing.T) {
+	dir := setupTestProject(t, map[string]string{
+		"AndroidManifest.xml": `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application>
+        <meta-data android:name="privacy_policy_url" android:value="https://example.com/privacy" />
+    </application>
+</manifest>`,
+	})
+
+	paths := []string{filepath.Join(dir, "AndroidManifest.xml")}
+	result := parseManifests(paths)
+
+	if len(result) != 1 {
+		t.Fatalf("expected 1 manifest, got %d", len(result))
+	}
+	if len(result[0].Permissions) != 2 {
+		t.Errorf("expected 2 permissions, got %d", len(result[0].Permissions))
+	}
+	if !result[0].HasMeta["privacy_policy_url"] {
+		t.Error("expected privacy_policy_url in HasMeta")
+	}
+}
+
+func TestParseManifests_NonexistentFile(t *testing.T) {
+	result := parseManifests([]string{"/nonexistent/AndroidManifest.xml"})
+	if len(result) != 0 {
+		t.Errorf("expected 0 results for nonexistent file, got %d", len(result))
+	}
+}
+
+// --- Tests for Checker.Name and Checker.Description ---
+
+func TestChecker_Name(t *testing.T) {
+	c := &Checker{}
+	if c.Name() == "" {
+		t.Error("Name should not be empty")
+	}
+}
+
+func TestChecker_Description(t *testing.T) {
+	c := &Checker{}
+	if c.Description() == "" {
+		t.Error("Description should not be empty")
+	}
+}
+

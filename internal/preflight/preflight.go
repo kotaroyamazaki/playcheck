@@ -6,13 +6,6 @@ import (
 	"time"
 )
 
-// Scanner is the interface that compliance scanners must implement.
-// Each scanner focuses on a specific area (manifest, code, data safety)
-// and implements the Checker interface defined in types.go.
-type Scanner interface {
-	Checker
-}
-
 // ScanResult holds the aggregated results from all scanners.
 type ScanResult struct {
 	Findings    []Finding
@@ -31,70 +24,52 @@ type ScanMetadata struct {
 	ScannerIDs  []string
 }
 
-// Runner orchestrates compliance scanners and aggregates results.
+// Runner orchestrates compliance checkers and aggregates results.
 type Runner struct {
-	scanners []Scanner
+	checkers []Checker
 }
 
-// NewRunner creates a Runner with all built-in scanners registered.
-func NewRunner() *Runner {
-	r := &Runner{}
-	r.registerBuiltinScanners()
-	return r
+// RegisterScanner adds a checker to the runner.
+func (r *Runner) RegisterScanner(s Checker) {
+	r.checkers = append(r.checkers, s)
 }
 
-// registerBuiltinScanners is a placeholder for scanner registration.
-// Scanners are registered externally via RegisterScanner to avoid import cycles,
-// since scanner packages import preflight for types.
-func (r *Runner) registerBuiltinScanners() {
-	// Scanners are registered by NewDefaultRunner() in the register package.
-}
-
-// RegisterScanner adds a scanner to the runner.
-func (r *Runner) RegisterScanner(s Scanner) {
-	r.scanners = append(r.scanners, s)
-}
-
-// Checkers returns the list of registered scanners as Checkers.
+// Checkers returns the list of registered checkers.
 func (r *Runner) Checkers() []Checker {
-	checkers := make([]Checker, len(r.scanners))
-	for i, s := range r.scanners {
-		checkers[i] = s
-	}
-	return checkers
+	return r.checkers
 }
 
-// Run executes all registered scanners against the project directory.
-// The onComplete callback is invoked after each scanner finishes, which
+// Run executes all registered checkers against the project directory.
+// The onComplete callback is invoked after each checker finishes, which
 // is used by the CLI to advance the progress bar.
-// Scanners run concurrently for better performance.
+// Checkers run concurrently for better performance.
 func (r *Runner) Run(projectDir string, onComplete func()) *ScanResult {
 	startTime := time.Now()
 
 	result := &ScanResult{
-		ByScanner: make(map[string]*CheckResult, len(r.scanners)),
+		ByScanner: make(map[string]*CheckResult, len(r.checkers)),
 		ScanMeta: ScanMetadata{
 			ProjectPath: projectDir,
 			StartTime:   startTime,
 		},
 	}
 
-	for _, s := range r.scanners {
-		result.ScanMeta.ScannerIDs = append(result.ScanMeta.ScannerIDs, s.ID())
+	for _, c := range r.checkers {
+		result.ScanMeta.ScannerIDs = append(result.ScanMeta.ScannerIDs, c.ID())
 	}
 
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	for _, s := range r.scanners {
+	for _, c := range r.checkers {
 		wg.Add(1)
-		go func(scanner Scanner) {
+		go func(checker Checker) {
 			defer wg.Done()
 
-			cr, err := scanner.Run(projectDir)
+			cr, err := checker.Run(projectDir)
 			if cr == nil {
 				cr = &CheckResult{
-					CheckID: scanner.ID(),
+					CheckID: checker.ID(),
 				}
 			}
 			if err != nil {
@@ -102,7 +77,7 @@ func (r *Runner) Run(projectDir string, onComplete func()) *ScanResult {
 			}
 
 			mu.Lock()
-			result.ByScanner[scanner.ID()] = cr
+			result.ByScanner[checker.ID()] = cr
 			result.Findings = append(result.Findings, cr.Findings...)
 			if cr.Passed {
 				result.TotalPassed++
@@ -114,7 +89,7 @@ func (r *Runner) Run(projectDir string, onComplete func()) *ScanResult {
 			if onComplete != nil {
 				onComplete()
 			}
-		}(s)
+		}(c)
 	}
 
 	wg.Wait()

@@ -2,10 +2,11 @@ package preflight
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
-// mockScanner implements Scanner for testing the Runner.
+// mockScanner implements Checker for testing the Runner.
 type mockScanner struct {
 	id       string
 	findings []Finding
@@ -310,10 +311,10 @@ func TestReport_RenderTerminal(t *testing.T) {
 	if output == "" {
 		t.Error("expected non-empty terminal output")
 	}
-	if !containsStr(output, "Play Store Compliance Report") {
+	if !strings.Contains(output, "Play Store Compliance Report") {
 		t.Error("expected report header in output")
 	}
-	if !containsStr(output, "FAIL") {
+	if !strings.Contains(output, "FAIL") {
 		t.Error("expected FAIL result when critical findings present")
 	}
 }
@@ -327,16 +328,8 @@ func TestReport_RenderTerminal_AllPassed(t *testing.T) {
 	report := NewReport(sr, SeverityInfo)
 	output := report.RenderTerminal()
 
-	if !containsStr(output, "PASS") {
+	if !strings.Contains(output, "PASS") {
 		t.Error("expected PASS result when no findings")
 	}
 }
 
-func containsStr(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
-}

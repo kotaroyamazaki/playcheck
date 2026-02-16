@@ -213,35 +213,16 @@ func (v *Validator) CheckCleartextTraffic() []preflight.Finding {
 
 // shortPermName returns a human-friendly short permission name.
 func shortPermName(fullName string) string {
-	parts := splitLast(fullName, ".")
-	if parts != "" {
-		return parts
+	if idx := strings.LastIndex(fullName, "."); idx >= 0 {
+		return fullName[idx+1:]
 	}
 	return fullName
 }
 
 // shortComponentName returns a human-friendly short component name.
 func shortComponentName(fullName string) string {
-	parts := splitLast(fullName, ".")
-	if parts != "" {
-		return parts
+	if idx := strings.LastIndex(fullName, "."); idx >= 0 {
+		return fullName[idx+1:]
 	}
 	return fullName
-}
-
-func splitLast(s, sep string) string {
-	idx := lastIndex(s, sep)
-	if idx < 0 {
-		return ""
-	}
-	return s[idx+len(sep):]
-}
-
-func lastIndex(s, sub string) int {
-	for i := len(s) - len(sub); i >= 0; i-- {
-		if s[i:i+len(sub)] == sub {
-			return i
-		}
-	}
-	return -1
 }
