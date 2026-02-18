@@ -11,8 +11,9 @@ description: >
 # playcheck
 
 Static analysis tool that scans Android projects for Google Play Store policy violations.
-Checks 31+ rules across 8 categories: dangerous permissions, privacy/data safety, SDK compliance,
-account management, manifest validation, security, code scanning, and monetization.
+Runs three scanners — manifest validator, code scanner, and data safety checker — covering
+dangerous permissions, privacy/data safety, SDK compliance, account management, manifest
+validation, code patterns (HTTP, crypto, SDKs), and component security.
 
 Works with any Android framework: native Android (Kotlin/Java), Flutter, React Native,
 Cordova/Ionic, Xamarin/.NET MAUI, Unity, NativeScript, and KMM.
@@ -134,14 +135,17 @@ playcheck scan <project-path> --severity warn
 
 ### Severity Levels
 
+playcheck uses four severity levels. In the JSON summary, `critical` is the combined count
+of CRITICAL and ERROR findings. The `--severity critical` flag shows both CRITICAL and ERROR.
+
 - **CRITICAL**: Must fix before Play Store submission. App will be rejected.
-  Examples: SMS permissions without being default handler, outdated targetSdkVersion, debuggable builds, hardcoded secrets, missing account deletion
+  Examples: outdated targetSdkVersion, SMS permission without default handler, SMS API in code
 - **ERROR**: Likely to cause rejection or policy warning.
-  Examples: cleartext traffic, exported components without protection, weak cryptography, non-Play billing for digital goods
+  Examples: cleartext traffic, missing android:exported, HTTP URLs, weak cryptography, missing privacy policy, no runtime permission requests
 - **WARNING**: Should review and potentially fix.
-  Examples: unused permissions, missing Data Safety disclosures, WebView JavaScript enabled, missing backup rules
+  Examples: unused permissions, missing Data Safety disclosures, SDK data collection, WebView JavaScript, no launcher activity
 - **INFO**: Informational, no action required.
-  Examples: deep link intent filter suggestions
+  Examples: exported component review, privacy policy URL found, account deletion detected
 
 ### JSON Output Structure
 
@@ -180,16 +184,16 @@ Note: `location` and `suggestion` fields are omitted when empty.
 For each finding, provide remediation guidance based on the category.
 Read `references/policy-rules.md` for the complete rule-by-rule reference with fix instructions and policy links.
 
-### Category Overview
+### By Scanner
 
-1. **Dangerous Permissions (DP001-DP010)**: Remove unused permissions. Submit Permissions Declaration Form for justified use. Replace restricted permissions with scoped alternatives.
-2. **Privacy & Data Safety (PDS001-PDS004)**: Add privacy policy URL. Implement data deletion. Update Data Safety form in Play Console. Add prominent disclosure before data collection.
-3. **SDK Compliance (SDK001-SDK004)**: Update targetSdkVersion to 35+. Update Play Core library to 1.10.0+. Integrate consent management for ads.
-4. **Account Management (AD001-AD002)**: Implement account deletion flow. Disclose auth data in Data Safety section.
-5. **Manifest Validation (MV001-MV005)**: Add app icon. Remove debuggable flag. Add versionCode. Configure backup rules. Add BROWSABLE category to deep links.
-6. **Security (MS001-MS004)**: Use HTTPS everywhere. Move secrets to environment variables. Protect exported components with permissions. Avoid addJavascriptInterface with untrusted content.
-7. **Monetization (MP002)**: Use Google Play Billing for digital goods and subscriptions.
-8. **Content Policy (MC001)**: Filter WebView content. Ensure content rating accuracy.
+**Manifest Scanner** (SDK001, DP001-DP007, MV001/MV002/MV004, MC001):
+- Validates targetSdkVersion >= 35, flags dangerous permissions, checks android:exported, verifies launcher activity, detects cleartext traffic.
+
+**Code Scanner** (CS001-CS014):
+- Scans Kotlin/Java files for HTTP URLs, weak crypto, SMS API usage, SDK data collection patterns (Firebase, AdMob, Facebook, trackers), WebView JavaScript, account creation/deletion, location/camera API usage.
+
+**Data Safety Checker** (PDS001-PDS004, AD001, SDK001, SDK004, DP006):
+- Verifies privacy policy presence, checks permission-to-Data-Safety-form alignment, detects data collection without consent, validates runtime permission requests, checks account deletion requirement, flags unused manifest permissions, audits third-party SDK disclosures.
 
 ## Validation
 

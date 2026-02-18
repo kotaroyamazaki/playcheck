@@ -65,8 +65,20 @@ main() {
   echo "Extracting..."
   tar -xzf "${tmp_dir}/${archive_name}" -C "$tmp_dir"
 
+  # Find the playcheck binary (may be at top level or in a subdirectory)
+  local binary
+  binary="$(find "$tmp_dir" -name playcheck -type f -perm -u+x 2>/dev/null | head -1)"
+  if [ -z "$binary" ]; then
+    # Fallback: look for any file named playcheck (may not have execute bit in archive)
+    binary="$(find "$tmp_dir" -name playcheck -type f 2>/dev/null | head -1)"
+  fi
+  if [ -z "$binary" ]; then
+    echo "Error: playcheck binary not found in archive." >&2
+    exit 1
+  fi
+
   mkdir -p "$INSTALL_DIR"
-  mv "${tmp_dir}/playcheck" "${INSTALL_DIR}/playcheck"
+  mv "$binary" "${INSTALL_DIR}/playcheck"
   chmod +x "${INSTALL_DIR}/playcheck"
 
   echo "Installed playcheck to ${INSTALL_DIR}/playcheck"

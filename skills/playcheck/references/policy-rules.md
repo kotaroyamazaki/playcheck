@@ -1,205 +1,183 @@
 # Policy Rules Reference
 
-Complete reference for all playcheck rules. Use this when helping users fix specific findings.
+Complete reference for all playcheck rules, organized by check_id as they appear in scan output.
 
-## Dangerous Permissions
+## Manifest Scanner Rules
 
-### DP001: SMS Permission Usage
+### SDK001: Target SDK Version
 - Severity: CRITICAL
-- Detects: READ_SMS, SEND_SMS, RECEIVE_SMS, WRITE_SMS permissions
-- Fix: Remove SMS permissions unless the app is the default SMS handler. Submit Permissions Declaration Form if required.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9047303
+- Detects: Missing or outdated targetSdkVersion (minimum required: 35)
+- Fix: Set targetSdkVersion to 35 or higher in build.gradle or AndroidManifest.xml.
+- Note: This ID is also emitted by the Data Safety checker for third-party SDK disclosure (see below).
 
-### DP002: Call Log Permission Usage
-- Severity: CRITICAL
-- Detects: READ_CALL_LOG, WRITE_CALL_LOG, PROCESS_OUTGOING_CALLS permissions
-- Fix: Remove call log permissions unless the app is the default phone handler. Submit Permissions Declaration Form if required.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9047303
+### DP001: Restricted Dangerous Permission
+- Severity: CRITICAL (SMS, RECORD_AUDIO) or WARNING (others)
+- Detects: RECORD_AUDIO, READ_SMS, SEND_SMS, RECEIVE_SMS, BODY_SENSORS permissions in manifest
+- Fix: Remove unused restricted permissions. Submit Permissions Declaration Form if required.
 
-### DP003: Location in Background Permission
-- Severity: CRITICAL
-- Detects: ACCESS_BACKGROUND_LOCATION permission
-- Fix: Use foreground location instead. If background location is essential, submit a Permissions Declaration Form explaining the user benefit.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9799150
+### DP002: Location Permission
+- Severity: CRITICAL (ACCESS_BACKGROUND_LOCATION) or WARNING (fine/coarse location)
+- Detects: ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION
+- Fix: Add prominent disclosure for location usage. Use foreground-only location if possible. Submit declaration form for background location.
 
-### DP004: Camera Permission Without Usage
+### DP003: Camera Permission
 - Severity: WARNING
-- Detects: CAMERA permission declared but no camera API usage in code
-- Fix: Remove CAMERA permission if camera functionality is not implemented.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9888170
+- Detects: CAMERA permission in manifest
+- Fix: Ensure camera usage is disclosed in Data Safety form. Request runtime permission.
 
-### DP005: Storage Permission (Broad Access)
-- Severity: ERROR
-- Detects: MANAGE_EXTERNAL_STORAGE permission
-- Fix: Use scoped storage APIs (MediaStore, Storage Access Framework) instead. Submit declaration form if broad access is essential.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9956427
-
-### DP006: Exact Alarm Permission
+### DP004: Contacts Permission
 - Severity: WARNING
-- Detects: SCHEDULE_EXACT_ALARM permission
-- Fix: Use inexact alarms (setAndAllowWhileIdle, setWindow) unless the app is an alarm clock, timer, or calendar.
-- Policy: https://support.google.com/googleplay/android-developer/answer/12253906
+- Detects: READ_CONTACTS, WRITE_CONTACTS permissions in manifest
+- Fix: Ensure contacts access is disclosed in Data Safety form. Add prominent disclosure.
 
-### DP007: Query All Packages Permission
+### DP005: Storage Permission
+- Severity: CRITICAL (MANAGE_EXTERNAL_STORAGE) or WARNING (READ/WRITE_EXTERNAL_STORAGE)
+- Detects: READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE
+- Fix: Use scoped storage APIs (MediaStore, Storage Access Framework) instead. Submit declaration form for broad access.
+
+### DP006: Phone Permission
+- Severity: CRITICAL (READ_CALL_LOG) or WARNING (READ_PHONE_STATE, CALL_PHONE)
+- Detects: READ_PHONE_STATE, CALL_PHONE, READ_CALL_LOG permissions in manifest
+- Fix: Remove unused phone permissions. Submit Permissions Declaration Form for call log access.
+- Note: This ID is also emitted by the Data Safety checker for background location (see below).
+
+### DP007: Calendar Permission
 - Severity: WARNING
-- Detects: QUERY_ALL_PACKAGES permission
-- Fix: Use targeted package visibility with `<queries>` element instead.
-- Policy: https://support.google.com/googleplay/android-developer/answer/10158779
+- Detects: READ_CALENDAR, WRITE_CALENDAR permissions in manifest
+- Fix: Ensure calendar data access is disclosed in Data Safety form.
 
-### DP008: Accessibility Service Permission
-- Severity: CRITICAL
-- Detects: BIND_ACCESSIBILITY_SERVICE or AccessibilityService usage
-- Fix: Only use AccessibilityService for genuine accessibility purposes. Provide clear documentation for review.
-- Policy: https://support.google.com/googleplay/android-developer/answer/10964491
-
-### DP009: VPN Service Permission
+### MV001: Missing android:exported Attribute
 - Severity: ERROR
-- Detects: BIND_VPN_SERVICE or VpnService usage
-- Fix: Ensure VPN is the app's core purpose. Disclose all data handling in the listing and privacy policy.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9888170
+- Detects: Activities, services, receivers, or providers with intent-filters but no android:exported attribute (required since Android 12 / API 31)
+- Fix: Add `android:exported="true"` or `android:exported="false"` to components with intent-filters.
 
-### DP010: Foreground Service Type Missing
-- Severity: ERROR
-- Detects: Foreground service without foregroundServiceType attribute (required for Android 14+)
-- Fix: Add `android:foregroundServiceType` to all foreground `<service>` elements. Valid types: camera, connectedDevice, dataSync, health, location, mediaPlayback, mediaProjection, microphone, phoneCall, remoteMessaging, shortService, specialUse, systemExempted.
-- Policy: https://developer.android.com/about/versions/14/changes/foreground-service-types
-
-## Privacy & Data Safety
-
-### PDS001: Missing Privacy Policy
-- Severity: CRITICAL
-- Detects: No privacy policy URL in code or manifest metadata
-- Fix: Add a privacy policy accessible from within the app and from the Play Store listing. Disclose data collection, usage, and sharing.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9859455
-
-### PDS002: Data Collection Without Disclosure
-- Severity: ERROR
-- Detects: Device ID, IMEI, subscriber ID, advertising ID, contacts access without disclosure
-- Fix: Add a prominent in-app disclosure before collecting user data explaining what, why, and how.
-- Policy: https://support.google.com/googleplay/android-developer/answer/10144311
-
-### PDS003: Data Safety Section Mismatch
-- Severity: ERROR
-- Detects: Location tracking, Firebase Analytics, or stored personal data that may not be declared in Data Safety
-- Fix: Update the Data Safety section in Play Console to accurately reflect all collected/shared/processed data.
-- Policy: https://support.google.com/googleplay/android-developer/answer/10787469
-
-### PDS004: Missing Data Deletion Mechanism
+### MV002: No Launcher Activity
 - Severity: WARNING
-- Detects: No account/data deletion functionality found in code
-- Fix: Implement in-app and web-based data deletion. Provide the URL in the Data Safety section.
-- Policy: https://support.google.com/googleplay/android-developer/answer/13327111
+- Detects: No activity with ACTION_MAIN + CATEGORY_LAUNCHER intent-filter
+- Fix: Add an intent-filter with action MAIN and category LAUNCHER to the main activity.
 
-## SDK Compliance
+### MV004: Cleartext Traffic Enabled
+- Severity: ERROR (explicitly enabled) or WARNING (enabled by default on targetSdk < 28)
+- Detects: `android:usesCleartextTraffic="true"` or implicit cleartext on older SDK targets
+- Fix: Set `android:usesCleartextTraffic="false"`. Use HTTPS for all network requests. Use Network Security Config for exceptions.
 
-### SDK001: Outdated Target SDK Version
-- Severity: CRITICAL
-- Detects: targetSdkVersion below 35
-- Fix: Update targetSdkVersion in build.gradle to at least API level 35 (Android 15). Test compatibility.
-- Policy: https://support.google.com/googleplay/android-developer/answer/11926878
-
-### SDK002: Missing Play Core Library Update
-- Severity: WARNING
-- Detects: Play Core library version below 1.10.0
-- Fix: Update Play Core library to 1.10.0+ in build.gradle dependencies.
-- Policy: https://developer.android.com/reference/com/google/android/play/core/release-notes
-
-### SDK003: Missing Ads SDK Consent Integration
-- Severity: ERROR
-- Detects: AdMob, Facebook Ads, Unity Ads, or AppLovin without consent management
-- Fix: Integrate Google UMP SDK or equivalent consent management. Initialize consent before loading ads.
-- Policy: https://support.google.com/googleplay/android-developer/answer/11112578
-
-### SDK004: Deprecated API Usage
-- Severity: WARNING
-- Detects: getRunningTasks, getRunningAppProcesses, GET_SIGNATURES, setJavaScriptEnabled
-- Fix: Replace deprecated API calls with modern equivalents per Android API reference.
-- Policy: https://developer.android.com/distribute/best-practices/develop/target-sdk
-
-## Account Management
-
-### AD001: Missing Account Deletion Option
-- Severity: CRITICAL
-- Detects: Account creation code (createUser, signUp, register) without matching deletion flow
-- Fix: Implement in-app account deletion. Provide web-based deletion option as well.
-- Policy: https://support.google.com/googleplay/android-developer/answer/13327111
-
-### AD002: Login Without Data Safety Disclosure
-- Severity: WARNING
-- Detects: Login/authentication code without Data Safety disclosure
-- Fix: Declare authentication-related data (email, name, user IDs) in Play Console Data Safety section.
-- Policy: https://support.google.com/googleplay/android-developer/answer/10787469
-
-## Manifest Validation
-
-### MV001: Missing App Icon
-- Severity: ERROR
-- Detects: `<application>` element missing `android:icon` attribute
-- Fix: Add `android:icon` to the `<application>` element pointing to launcher icon resource.
-- Policy: https://developer.android.com/guide/topics/manifest/application-element
-
-### MV002: Debuggable Build
-- Severity: CRITICAL
-- Detects: `android:debuggable="true"` in manifest
-- Fix: Remove `android:debuggable="true"` or ensure it is false for release builds. Use Gradle build types.
-- Policy: https://developer.android.com/guide/topics/manifest/application-element#debug
-
-### MV003: Missing Version Code
-- Severity: ERROR
-- Detects: Missing `android:versionCode` in manifest
-- Fix: Add `android:versionCode` to `<manifest>` or set it in build.gradle.
-- Policy: https://developer.android.com/guide/topics/manifest/manifest-element
-
-### MV004: Backup Rules Missing
-- Severity: WARNING
-- Detects: Missing `android:dataExtractionRules` or `android:fullBackupContent`
-- Fix: Add `android:dataExtractionRules` (Android 12+) and `android:fullBackupContent` (older) to `<application>`.
-- Policy: https://developer.android.com/guide/topics/data/autobackup
-
-### MV005: Intent Filter Without BROWSABLE Category
+### MC001: Exported Component Security
 - Severity: INFO
-- Detects: Deep link intent filter with VIEW action but no BROWSABLE category
-- Fix: Add `<category android:name="android.intent.category.BROWSABLE"/>` to deep link intent filters.
-- Policy: https://developer.android.com/training/app-links/deep-linking
+- Detects: Components with `android:exported="true"` that are accessible to other apps
+- Fix: Review exported components to ensure they don't expose sensitive functionality. Add permission protection if needed.
 
-## Security
+## Code Scanner Rules
 
-### MS001: Insecure Network Communication
+### CS001: HTTP URL Detected
 - Severity: ERROR
-- Detects: `usesCleartextTraffic="true"`, HTTP URLs in code, cleartext traffic in network security config
-- Fix: Set `android:usesCleartextTraffic="false"`. Use HTTPS for all requests. Configure network security config for exceptions.
-- Policy: https://developer.android.com/privacy-and-security/security-config
+- Detects: Hardcoded `http://` URLs and HttpURLConnection usage in Kotlin/Java code
+- Fix: Replace `http://` URLs with `https://` to ensure encrypted data transmission.
 
-### MS002: Hardcoded Secrets or API Keys
-- Severity: CRITICAL
-- Detects: API keys, secret keys, passwords, private keys, Firebase credentials in source code
-- Fix: Move secrets to environment variables, secrets manager, or Android encrypted SharedPreferences. Never commit secrets.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9848633
+### CS002: Privacy Policy URL Found
+- Severity: INFO
+- Detects: Privacy policy references in code (informational, confirms policy exists)
+- Fix: Verify the privacy policy URL is accessible, up to date, and covers all Data Safety disclosures.
 
-### MS003: Exported Components Without Protection
-- Severity: ERROR
-- Detects: Activities, services, or receivers with `exported="true"` but no `android:permission`
-- Fix: Add `android:permission` to exported components, or set `android:exported="false"` if external access is not needed.
-- Policy: https://developer.android.com/topic/security/best-practices
-
-### MS004: WebView JavaScript Interface Vulnerability
-- Severity: ERROR
-- Detects: `addJavascriptInterface()`, `setAllowFileAccessFromFileURLs(true)`, `setAllowUniversalAccessFromFileURLs(true)`
-- Fix: Avoid addJavascriptInterface with untrusted content. Use WebMessagePort. Disable file access from URLs.
-- Policy: https://developer.android.com/privacy-and-security/risks/webview-javascript
-
-## Monetization
-
-### MP002: Non-Play Billing for Digital Goods
-- Severity: CRITICAL
-- Detects: Stripe, Braintree, PayPal, Razorpay SDK usage for potential digital goods purchases
-- Fix: Use Google Play Billing Library for digital goods and subscriptions. Third-party payment is only allowed for physical goods.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9858738
-
-## Content Policy
-
-### MC001: Missing Content Rating
+### CS003: Firebase Analytics Usage
 - Severity: WARNING
-- Detects: WebView loading external URLs, JavaScript interfaces that could serve unrated content
-- Fix: Filter WebView content appropriately. Complete content rating questionnaire in Play Console accurately.
-- Policy: https://support.google.com/googleplay/android-developer/answer/9859455
+- Detects: FirebaseAnalytics, logEvent, setAnalyticsCollectionEnabled
+- Fix: Disclose Firebase Analytics data collection in Data Safety form: App interactions, Device or other IDs, Diagnostics.
+
+### CS004: AdMob SDK Usage
+- Severity: WARNING
+- Detects: AdRequest, AdView, InterstitialAd, RewardedAd, MobileAds.initialize
+- Fix: Disclose AdMob data collection in Data Safety form: Advertising ID, approximate location, device info.
+
+### CS005: Advertising ID Usage
+- Severity: WARNING
+- Detects: AdvertisingIdClient, getAdvertisingIdInfo, advertisingId
+- Fix: Disclose advertising ID in Data Safety form under "Device or other IDs". Ensure privacy policy exists.
+
+### CS006: Account Creation Pattern
+- Severity: WARNING
+- Detects: createAccount, signUp, registerUser, createUser, createUserWithEmailAndPassword
+- Fix: Ensure an in-app account deletion option exists (required by Play Store policy).
+
+### CS007: Account Deletion Pattern
+- Severity: INFO
+- Detects: deleteAccount, removeAccount, deleteUser, accountDeletion (informational, confirms deletion exists)
+- Fix: Verify the deletion flow is easy to find and deletes all user data or discloses retention.
+
+### CS008: SMS API Usage in Code
+- Severity: CRITICAL
+- Detects: SmsManager, sendTextMessage, sendMultipartTextMessage
+- Fix: Remove direct SMS API usage. Use Firebase Auth Phone verification or SMS Retriever API instead.
+
+### CS009: Location API Usage
+- Severity: WARNING
+- Detects: FusedLocationProviderClient, LocationManager, requestLocationUpdates, getLastKnownLocation
+- Fix: Disclose location usage in Data Safety form. Add prominent disclosure before requesting location permission.
+
+### CS010: Camera API Usage
+- Severity: WARNING
+- Detects: CameraManager, CameraX, Camera2, CameraDevice, ACTION_IMAGE_CAPTURE
+- Fix: Disclose camera usage in Data Safety form. Request camera permission at runtime with context.
+
+### CS011: Weak Cryptography
+- Severity: ERROR
+- Detects: DES cipher usage, MD5 for security, SHA-1 for security-critical operations
+- Fix: Use AES-256, RSA-2048+. Replace DES, MD5, and SHA-1 for security-critical operations.
+
+### CS012: WebView JavaScript Enabled
+- Severity: WARNING
+- Detects: setJavaScriptEnabled(true), addJavascriptInterface
+- Fix: Validate all URLs loaded in WebView. Implement content security. Consider SafeBrowsing API.
+
+### CS013: Facebook SDK Usage
+- Severity: WARNING
+- Detects: com.facebook, FacebookSdk, AppEventsLogger, LoginManager
+- Fix: Disclose Facebook SDK data collection in Data Safety form. Review Facebook docs for full disclosure requirements.
+
+### CS014: Third-Party Tracking SDK
+- Severity: WARNING
+- Detects: Adjust, AppsFlyer, Amplitude, Mixpanel, Segment, Braze, Crashlytics SDKs
+- Fix: Disclose all third-party SDK data collection in Data Safety form.
+
+## Data Safety Checker Rules
+
+### PDS001: Privacy Policy Not Found
+- Severity: ERROR
+- Detects: No privacy policy URL in AndroidManifest.xml or string resources
+- Fix: Add a privacy policy URL via `<meta-data>` tag in manifest or include it in string resources. Policy must cover all data collection.
+
+### PDS002: Permission Requires Data Safety Disclosure
+- Severity: WARNING
+- Detects: Dangerous permissions (SMS, call log, contacts, location, camera, audio, storage, calendar, sensors) that require Data Safety form entries
+- Fix: Declare the corresponding data type in your Play Console Data Safety form.
+
+### PDS003: Data Collection Without Consent
+- Severity: WARNING
+- Detects: Data collection APIs (getDeviceId, getAdvertisingIdInfo, ANDROID_ID, getAccounts, location APIs) in files without consent-related code
+- Fix: Implement a consent dialog. Obtain user consent before collecting personal data.
+
+### PDS004: No Runtime Permission Request
+- Severity: ERROR
+- Detects: Dangerous permissions declared in manifest but no requestPermissions/checkSelfPermission calls found in code
+- Fix: Implement runtime permission requests using ActivityCompat.requestPermissions() or the Activity Result API.
+
+### AD001: Account Deletion Not Found
+- Severity: ERROR
+- Detects: Account creation patterns in code without corresponding account deletion functionality
+- Fix: Implement in-app account deletion. See https://support.google.com/googleplay/android-developer/answer/13327111
+
+### SDK001 (Data Safety): Third-Party SDK Disclosure
+- Severity: WARNING
+- Detects: Third-party SDKs in build.gradle (Firebase Analytics, Crashlytics, AdMob, Facebook, Adjust, AppsFlyer, Sentry, Maps, Mixpanel, Amplitude, Braze, OneSignal, Stripe)
+- Fix: Declare data collection by the detected SDK in your Play Console Data Safety form.
+- Note: Shares ID with the manifest scanner's Target SDK Version check. Distinguish by context: manifest findings reference targetSdkVersion; data safety findings reference specific SDK dependencies.
+
+### SDK004 (Data Safety): Unused Permission in Code
+- Severity: WARNING
+- Detects: Dangerous permissions declared in manifest but no corresponding API usage in Kotlin/Java code
+- Fix: Remove the unused permission from manifest, or verify it is used by a library dependency.
+
+### DP006 (Data Safety): Background Location Access
+- Severity: ERROR
+- Detects: ACCESS_BACKGROUND_LOCATION in manifest, with additional check for missing foreground location permission
+- Fix: Add prominent in-app disclosure for background location. Submit permission declaration form in Play Console. Ensure foreground location permission is also present.
+- Note: Shares ID with the manifest scanner's Phone Permission check. Distinguish by context: manifest findings reference phone/call permissions; data safety findings reference background location.
