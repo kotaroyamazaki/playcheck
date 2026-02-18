@@ -4,7 +4,7 @@ bin/
 *.dll
 *.so
 *.dylib
-playcheck
+/playcheck
 
 # Test binary, built with `go test -c`
 *.test
