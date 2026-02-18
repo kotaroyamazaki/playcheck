@@ -24,7 +24,7 @@ Cordova/Ionic, Xamarin/.NET MAUI, Unity, NativeScript, and KMM.
 - User is debugging a Play Store rejection or policy warning
 - User asks about dangerous permissions, data safety, or privacy policy requirements
 - User wants a pre-submission compliance audit
-- User needs to find security issues (cleartext traffic, hardcoded secrets, exported components)
+- User needs to find security issues (cleartext traffic, weak cryptography, exported components)
 
 ## When NOT to Use
 
@@ -111,7 +111,7 @@ playcheck scan <project-path> --format json --output report.json
 Filter by minimum severity:
 
 ```bash
-# Only show critical/error-level issues
+# Only show critical-level issues
 playcheck scan <project-path> --severity critical
 
 # Show warnings and above
@@ -136,7 +136,8 @@ playcheck scan <project-path> --severity warn
 ### Severity Levels
 
 playcheck uses four severity levels. In the JSON summary, `critical` is the combined count
-of CRITICAL and ERROR findings. The `--severity critical` flag shows both CRITICAL and ERROR.
+of CRITICAL and ERROR findings (when using the default `--severity all`).
+The `--severity critical` flag shows only CRITICAL-level findings.
 
 - **CRITICAL**: Must fix before Play Store submission. App will be rejected.
   Examples: outdated targetSdkVersion, SMS permission without default handler, SMS API in code
