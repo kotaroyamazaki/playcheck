@@ -23,7 +23,7 @@ detect_arch() {
 }
 
 main() {
-  local os arch version url archive_name tmp_dir
+  local os arch tag version url archive_name tmp_dir
 
   os="$(detect_os)"
   arch="$(detect_arch)"
@@ -38,16 +38,19 @@ main() {
   fi
 
   echo "Detecting latest version..."
-  version="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | sed -E 's/.*"v?([^"]+)".*/\1/')"
+  tag="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')"
 
-  if [ -z "$version" ]; then
+  if [ -z "$tag" ]; then
     echo "Error: Could not determine latest version." >&2
     exit 1
   fi
-  echo "Latest version: ${version}"
+
+  # Strip leading 'v' for the archive filename (GoReleaser uses version without v prefix)
+  version="${tag#v}"
+  echo "Latest version: ${version} (tag: ${tag})"
 
   archive_name="playcheck_${version}_${os}_${arch}.tar.gz"
-  url="https://github.com/${REPO}/releases/download/v${version}/${archive_name}"
+  url="https://github.com/${REPO}/releases/download/${tag}/${archive_name}"
 
   echo "Downloading ${archive_name}..."
   tmp_dir="$(mktemp -d)"

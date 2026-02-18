@@ -39,16 +39,23 @@ Cordova/Ionic, Xamarin/.NET MAUI, Unity, NativeScript, and KMM.
 playcheck --version 2>/dev/null && echo "playcheck is installed" || echo "playcheck not found"
 ```
 
-2. If not installed, check for Go and install accordingly:
+2. If not installed, install via one of these methods:
 
 ```bash
 # Option A: Install via Go (preferred)
 go install github.com/kotaroyamazaki/playcheck/cmd/playcheck@latest
-
-# Option B: Install pre-built binary (no Go required)
-# Run the install script bundled with this skill
-bash "$(dirname "$0")/scripts/install-playcheck.sh"
 ```
+
+If Go is not available, run the install script bundled with this skill.
+Locate the skill directory (where this SKILL.md is installed) and run:
+
+```bash
+bash <skill-directory>/scripts/install-playcheck.sh
+```
+
+The skill directory is typically `~/.claude/skills/playcheck/`,
+`.claude/skills/playcheck/`, or `.agents/skills/playcheck/`
+depending on the agent and installation method.
 
 3. Verify installation:
 
@@ -142,30 +149,31 @@ When using `--format json`, the output contains:
 
 ```json
 {
-  "metadata": {
-    "project_path": "...",
-    "start_time": "...",
-    "duration": "..."
-  },
+  "timestamp": "2026-01-15T10:30:00Z",
+  "project_path": "/path/to/android/project",
   "summary": {
-    "total": 5,
+    "total_checks": 31,
+    "passed": 26,
+    "failed": 5,
     "critical": 2,
-    "error": 1,
     "warning": 2,
-    "info": 0
+    "info": 1,
+    "duration": "1.234s"
   },
   "findings": [
     {
       "check_id": "DP001",
       "severity": "CRITICAL",
       "title": "SMS Permission Usage",
-      "description": "...",
-      "location": "AndroidManifest.xml",
-      "suggestion": "..."
+      "description": "App requests SMS permission ...",
+      "location": "AndroidManifest.xml:15",
+      "suggestion": "Remove SMS permissions unless ..."
     }
   ]
 }
 ```
+
+Note: `location` and `suggestion` fields are omitted when empty.
 
 ## Help Fix Issues
 
